@@ -52,6 +52,12 @@ const authentication = {
             }
 
             let supabaseUserId: string;
+            let session: any = null;
+            let access_token: string | null = null;
+            let refresh_token: string | null = null;
+            let expires_in: number | null = null;
+            let token_type: string | null = null;
+
             const foundUser = authData && authData.users
                 ? authData.users.find((user: any) => user.email === email)
                 : null;
@@ -84,9 +90,28 @@ const authentication = {
                 },
             });
 
+            // 3. Sign in to get tokens
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+            if (!signInError && signInData && signInData.session) {
+                session = signInData.session;
+                access_token = session.access_token;
+                refresh_token = session.refresh_token;
+                expires_in = session.expires_in;
+                token_type = session.token_type;
+            }
+
             return {
                 success: true,
-                data: dbUser,
+                data: {
+                    user: dbUser,
+                    access_token,
+                    refresh_token,
+                    expires_in,
+                    token_type,
+                },
                 error: null,
             };
         } catch (error: any) {
@@ -119,38 +144,42 @@ const authentication = {
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email,
                 password,
-              });
+            });
 
-              if(authError){
+            if(authError){
                 return {
                     success: false,
                     data: null,
                     error: authError.message,
                 };
-              }
+            }
 
-              const user = await database.user.findUnique({
+            const user = await database.user.findUnique({
                 where: { supabaseUserId: authData.user.id },
-              });
-          
-              if (!user) {
+            });
+        
+            if (!user) {
                 return {
                     success: false,
                     data: null,
                     error: "User not found",
                 }
-              }
+            }
 
-              return {
+            const session = authData.session;
+            return {
                 success: true,
                 data: {
                     user,
-                    session: authData.session
+                    access_token: session?.access_token,
+                    refresh_token: session?.refresh_token,
+                    expires_in: session?.expires_in,
+                    token_type: session?.token_type,
                 },
                 error: null
-              }
+            }
         } catch (error: any) {
-             return {
+            return {
                 success: false,
                 data: null,
                 error: error.message || "Unknown error",
@@ -225,6 +254,59 @@ const authentication = {
             return {
                 success: true,
                 data,
+                error: null,
+            };
+        } catch (error: any) {
+            return {
+                success: false,
+                data: null,
+                error: error.message || "Unknown error",
+            };
+        }
+    },
+    refreshToken: async (params: { refresh_token: string }): Promise<APIResponse> => {
+        try {
+            const schema = z.object({
+                refresh_token: z.string().min(1)
+            });
+            const validatedParams = schema.safeParse(params);
+            if (!validatedParams.success)
+                return {
+                    success: false,
+                    data: null,
+                    error: validatedParams.error.issues[0].message,
+                };
+            const { refresh_token } = params;
+            const { data: sessionData, error } = await supabase.auth.refreshSession({ refresh_token });
+            if (error || !sessionData.session) {
+                return {
+                    success: false,
+                    data: null,
+                    error: error?.message || "Failed to refresh session",
+                };
+            }
+            const session = sessionData.session;
+            const { user } = sessionData;
+            // Find user in DB
+            const dbUser = await database.user.findUnique({
+                where: { supabaseUserId: user?.id },
+            });
+            if (!dbUser) {
+                return {
+                    success: false,
+                    data: null,
+                    error: "User not found",
+                };
+            }
+            return {
+                success: true,
+                data: {
+                    user: dbUser,
+                    access_token: session.access_token,
+                    refresh_token: session.refresh_token,
+                    expires_in: session.expires_in,
+                    token_type: session.token_type,
+                },
                 error: null,
             };
         } catch (error: any) {

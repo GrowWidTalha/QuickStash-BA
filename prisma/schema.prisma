@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// User model (extends Supabase auth.users)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  avatarUrl String   
+  
+  // Supabase auth user ID
+  supabaseUserId String? @unique
+  
+  // Relations
+  saves Save[]
+  
+  @@map("users")
+}
+
+// Saved content model
+model Save {
+  id          String   @id @default(cuid())
+  title       String
+  url         String
+  content     String?  // Parsed content
+  excerpt     String?  // Summary/excerpt
+  imageUrl    String?  // Featured image
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("saves")
+}

@@ -1,5 +1,5 @@
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@/src/generated/prisma";
 import { createClient } from "@supabase/supabase-js";
 
 const prismaClientSingleton = () => {

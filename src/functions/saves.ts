@@ -33,6 +33,7 @@ export interface ToggleArchiveParams {
 const saves = {
   addSave: async (params: AddSaveParams): Promise<APIResponse> => {
     try {
+      console.log("~ 🚀: addSave - validating params", params);
       const schema = z.object({
         url: z.string().url(),
         accessToken: z.string().min(1),
@@ -46,8 +47,10 @@ const saves = {
         };
       const { url, accessToken } = params;
       // Get current user from token
+      console.log("~ 🚀: addSave - getting user from token", accessToken);
       const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
       if (authError || !user) {
+        console.log("~ 🚀: addSave - invalid token or user not found", authError);
         return {
           success: false,
           data: null,
@@ -55,10 +58,12 @@ const saves = {
         };
       }
       // Get user from database
+      console.log("~ 🚀: addSave - finding user in DB", user.id);
       const dbUser = await database.user.findUnique({
         where: { supabaseUserId: user.id },
       });
       if (!dbUser) {
+        console.log("~ 🚀: addSave - user not found in DB");
         return {
           success: false,
           data: null,
@@ -66,6 +71,7 @@ const saves = {
         };
       }
       // Check if URL already exists for this user
+      console.log("~ 🚀: addSave - checking if URL already saved", url);
       const existingSave = await database.save.findFirst({
         where: {
           url,
@@ -73,6 +79,7 @@ const saves = {
         },
       });
       if (existingSave) {
+        console.log("~ 🚀: addSave - URL already saved");
         return {
           success: false,
           data: null,
@@ -80,8 +87,10 @@ const saves = {
         };
       }
       // Fetch and parse the URL
+      console.log("~ 🚀: addSave - fetching and parsing URL", url);
       const parsedContent = await utils.fetchAndParseUrl(url);
       // Create save record
+      console.log("~ 🚀: addSave - creating save record in DB");
       const save = await database.save.create({
         data: {
           title: parsedContent.title,
@@ -92,6 +101,7 @@ const saves = {
           userId: dbUser.id,
         },
       });
+      console.log("~ 🚀: addSave - save created", save.id);
       return {
         success: true,
         data: {
@@ -106,6 +116,7 @@ const saves = {
         error: null,
       };
     } catch (error: any) {
+      console.log("~ 🚀: addSave - error", error);
       return {
         success: false,
         data: null,
@@ -115,6 +126,7 @@ const saves = {
   },
   getAllSaves: async (params: GetAllSavesParams): Promise<APIResponse> => {
     try {
+      console.log("~ 🚀: getAllSaves - validating params", params);
       const schema = z.object({
         accessToken: z.string().min(1),
         archived: z.boolean().optional(),
@@ -130,8 +142,10 @@ const saves = {
         };
       const { accessToken, archived, page = 1, limit = 20 } = params;
       // Get current user from token
+      console.log("~ 🚀: getAllSaves - getting user from token", accessToken);
       const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
       if (authError || !user) {
+        console.log("~ 🚀: getAllSaves - invalid token or user not found", authError);
         return {
           success: false,
           data: null,
@@ -139,10 +153,12 @@ const saves = {
         };
       }
       // Get user from database
+      console.log("~ 🚀: getAllSaves - finding user in DB", user.id);
       const dbUser = await database.user.findUnique({
         where: { supabaseUserId: user.id },
       });
       if (!dbUser) {
+        console.log("~ 🚀: getAllSaves - user not found in DB");
         return {
           success: false,
           data: null,
@@ -156,6 +172,7 @@ const saves = {
         where.isArchived = archived;
       }
       // Get saves with pagination
+      console.log("~ 🚀: getAllSaves - fetching saves with pagination", { page, limit, where });
       const saves = await database.save.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -174,6 +191,7 @@ const saves = {
       });
       // Get total count
       const total = await database.save.count({ where });
+      console.log("~ 🚀: getAllSaves - total saves found", total);
       return {
         success: true,
         data: {
@@ -188,6 +206,7 @@ const saves = {
         error: null,
       };
     } catch (error: any) {
+      console.log("~ 🚀: getAllSaves - error", error);
       return {
         success: false,
         data: null,
@@ -197,6 +216,7 @@ const saves = {
   },
   getSaveById: async (params: GetSaveByIdParams): Promise<APIResponse> => {
     try {
+      console.log("~ 🚀: getSaveById - validating params", params);
       const schema = z.object({
         id: z.string().min(1),
         accessToken: z.string().min(1),
@@ -210,8 +230,10 @@ const saves = {
         };
       const { id, accessToken } = params;
       // Get current user from token
+      console.log("~ 🚀: getSaveById - getting user from token", accessToken);
       const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
       if (authError || !user) {
+        console.log("~ 🚀: getSaveById - invalid token or user not found", authError);
         return {
           success: false,
           data: null,
@@ -219,10 +241,12 @@ const saves = {
         };
       }
       // Get user from database
+      console.log("~ 🚀: getSaveById - finding user in DB", user.id);
       const dbUser = await database.user.findUnique({
         where: { supabaseUserId: user.id },
       });
       if (!dbUser) {
+        console.log("~ 🚀: getSaveById - user not found in DB");
         return {
           success: false,
           data: null,
@@ -230,6 +254,7 @@ const saves = {
         };
       }
       // Get save
+      console.log("~ 🚀: getSaveById - fetching save by id", id);
       const save = await database.save.findFirst({
         where: {
           id,
@@ -237,6 +262,7 @@ const saves = {
         },
       });
       if (!save) {
+        console.log("~ 🚀: getSaveById - save not found");
         return {
           success: false,
           data: null,
@@ -249,6 +275,7 @@ const saves = {
         error: null,
       };
     } catch (error: any) {
+      console.log("~ 🚀: getSaveById - error", error);
       return {
         success: false,
         data: null,
@@ -258,6 +285,7 @@ const saves = {
   },
   deleteSave: async (params: DeleteSaveParams): Promise<APIResponse> => {
     try {
+      console.log("~ 🚀: deleteSave - validating params", params);
       const schema = z.object({
         id: z.string().min(1),
         accessToken: z.string().min(1),
@@ -271,8 +299,10 @@ const saves = {
         };
       const { id, accessToken } = params;
       // Get current user from token
+      console.log("~ 🚀: deleteSave - getting user from token", accessToken);
       const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
       if (authError || !user) {
+        console.log("~ 🚀: deleteSave - invalid token or user not found", authError);
         return {
           success: false,
           data: null,
@@ -280,10 +310,12 @@ const saves = {
         };
       }
       // Get user from database
+      console.log("~ 🚀: deleteSave - finding user in DB", user.id);
       const dbUser = await database.user.findUnique({
         where: { supabaseUserId: user.id },
       });
       if (!dbUser) {
+        console.log("~ 🚀: deleteSave - user not found in DB");
         return {
           success: false,
           data: null,
@@ -291,6 +323,7 @@ const saves = {
         };
       }
       // Delete save
+      console.log("~ 🚀: deleteSave - deleting save", id);
       const save = await database.save.deleteMany({
         where: {
           id,
@@ -298,6 +331,7 @@ const saves = {
         },
       });
       if (save.count === 0) {
+        console.log("~ 🚀: deleteSave - save not found");
         return {
           success: false,
           data: null,
@@ -310,6 +344,7 @@ const saves = {
         error: null,
       };
     } catch (error: any) {
+      console.log("~ 🚀: deleteSave - error", error);
       return {
         success: false,
         data: null,
@@ -319,6 +354,7 @@ const saves = {
   },
   toggleArchive: async (params: ToggleArchiveParams): Promise<APIResponse> => {
     try {
+      console.log("~ 🚀: toggleArchive - validating params", params);
       const schema = z.object({
         id: z.string().min(1),
         accessToken: z.string().min(1),
@@ -332,8 +368,10 @@ const saves = {
         };
       const { id, accessToken } = params;
       // Get current user from token
+      console.log("~ 🚀: toggleArchive - getting user from token", accessToken);
       const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
       if (authError || !user) {
+        console.log("~ 🚀: toggleArchive - invalid token or user not found", authError);
         return {
           success: false,
           data: null,
@@ -341,10 +379,12 @@ const saves = {
         };
       }
       // Get user from database
+      console.log("~ 🚀: toggleArchive - finding user in DB", user.id);
       const dbUser = await database.user.findUnique({
         where: { supabaseUserId: user.id },
       });
       if (!dbUser) {
+        console.log("~ 🚀: toggleArchive - user not found in DB");
         return {
           success: false,
           data: null,
@@ -352,6 +392,7 @@ const saves = {
         };
       }
       // Get current save
+      console.log("~ 🚀: toggleArchive - fetching current save", id);
       const currentSave = await database.save.findFirst({
         where: {
           id,
@@ -359,6 +400,7 @@ const saves = {
         },
       });
       if (!currentSave) {
+        console.log("~ 🚀: toggleArchive - save not found");
         return {
           success: false,
           data: null,
@@ -366,6 +408,7 @@ const saves = {
         };
       }
       // Toggle archive status
+      console.log("~ 🚀: toggleArchive - toggling archive status", { id, isArchived: !currentSave.isArchived });
       const updatedSave = await database.save.update({
         where: { id },
         data: { isArchived: !currentSave.isArchived },
@@ -381,6 +424,7 @@ const saves = {
         error: null,
       };
     } catch (error: any) {
+      console.log("~ 🚀: toggleArchive - error", error);
       return {
         success: false,
         data: null,

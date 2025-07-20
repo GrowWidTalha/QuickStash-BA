@@ -187,6 +187,7 @@ const saves = {
           isArchived: true,
           createdAt: true,
           updatedAt: true,
+          isRead: true,
         },
       });
       // Get total count

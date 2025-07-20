@@ -37,10 +37,12 @@ model Save {
   id          String   @id @default(cuid())
   title       String
   url         String
+  source      String
   content     String?  // Parsed content
   excerpt     String?  // Summary/excerpt
   imageUrl    String?  // Featured image
   isArchived  Boolean  @default(false)
+  isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   

@@ -89,6 +89,7 @@ const saves = {
       // Fetch and parse the URL
       console.log("~ 🚀: addSave - fetching and parsing URL", url);
       const parsedContent = await utils.fetchAndParseUrl(url);
+      console.log(parsedContent)
       // Create save record
       console.log("~ 🚀: addSave - creating save record in DB");
       const save = await database.save.create({
@@ -99,6 +100,10 @@ const saves = {
           excerpt: parsedContent.excerpt,
           imageUrl: parsedContent.imageUrl,
           userId: dbUser.id,
+          isRead: false,
+          isArchived: false,
+          readTime: parsedContent.readTime,
+          source: parsedContent.source
         },
       });
       console.log("~ 🚀: addSave - save created", save.id);
@@ -188,6 +193,8 @@ const saves = {
           createdAt: true,
           updatedAt: true,
           isRead: true,
+          readTime: true,
+          source: true
         },
       });
       // Get total count
@@ -220,7 +227,7 @@ const saves = {
       console.log("~ 🚀: getSaveById - validating params", params);
       const schema = z.object({
         id: z.string().min(1),
-        accessToken: z.string().min(1),
+        accessToken: z.string().min(1),   
       });
       const validatedParams = schema.safeParse(params);
       if (!validatedParams.success)

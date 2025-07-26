@@ -43,6 +43,7 @@ model Save {
   imageUrl    String?  // Featured image
   isArchived  Boolean  @default(false)
   isRead      Boolean  @default(false)
+  readTime    Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   

@@ -116,10 +116,13 @@ export async function fetchAndParseUrl(url: string): Promise<ParsedContent> {
   // Readability parse
   const reader = new Readability(doc);
   const art = reader.parse();
-  if (!art) throw new Error('Readability failed to parse content');
+  if (!art) {
+    throw new Error('Readability failed to parse content')
+  };
 
   // Sanitize
-  const clean = sanitizeHtml(art.content, {
+  // @ts-ignore
+  const clean = sanitizeHtml(art?.content, {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'h1', 'h2', 'blockquote']),
     allowedAttributes: { a: ['href','target','rel'], img: ['src','alt','title'], '*': ['title'] },
   });
@@ -128,6 +131,8 @@ export async function fetchAndParseUrl(url: string): Promise<ParsedContent> {
   const excerpt = generateExcerptFromHTML(clean);
 
   // Image
+  // @ts-ignore
+
   const imageUrl = extractImageUrl(html, url, art.content);
 
   // Source
@@ -135,6 +140,7 @@ export async function fetchAndParseUrl(url: string): Promise<ParsedContent> {
 
   // Read time
   const words = (art.textContent || '').split(/\s+/).filter(Boolean).length;
+  // @ts-ignore
   const imgs = (art.content.match(/<img\s/g) || []).length;
   const readTime = Math.max(1, Math.round(words/200 + imgs*0.5));
 

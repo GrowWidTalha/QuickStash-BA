@@ -97,31 +97,10 @@ const authentication = {
                 },
             });
 
-            // 3. Sign in to get tokens
-            console.log("~ 🚀: Register - signing in to get tokens", email);
-            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
-            if (!signInError && signInData && signInData.session) {
-                session = signInData.session;
-                access_token = session.access_token;
-                refresh_token = session.refresh_token;
-                expires_in = session.expires_in;
-                token_type = session.token_type;
-                console.log("~ 🚀: Register - received tokens", { access_token, refresh_token, expires_in, token_type });
-            } else {
-                console.log("~ 🚀: Register - failed to get tokens", signInError);
-            }
-
             return {
                 success: true,
                 data: {
                     user: dbUser,
-                    access_token,
-                    refresh_token,
-                    expires_in,
-                    token_type,
                 },
                 error: null,
             };
@@ -134,232 +113,235 @@ const authentication = {
             };
         }
     },
-    login: async (params:  LoginParams): Promise<APIResponse> => {
+    login: async (params: LoginParams): Promise<APIResponse> => {
         try {
-            console.log("~ 🚀: Login - validating params", params);
+            console.log("~ 🚀: Login - validating supabaseUserId", params);
+        
+            // 1. Validate input
             const loginSchema = z.object({
-                email: z.string().email(),
-                password: z.string()
-            })
-
-            const validatedParams = loginSchema.safeParse(params);
-
-            if (!validatedParams.success)
-                return {
-                    success: false,
-                    data: null,
-                    error: validatedParams.error.issues[0].message,
-                };
-
-            const email = params.email;
-            const password = params.password;
-
-            console.log("~ 🚀: Login - signing in with Supabase", email);
-            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-              });
-
-              if(authError){
-                console.log("~ 🚀: Login - error signing in", authError);
-                return {
-                    success: false,
-                    data: null,
-                    error: authError.message,
-                };
-              }
-
-              console.log("~ 🚀: Login - finding user in DB", authData.user.id);
-              const user = await database.user.findUnique({
-                where: { supabaseUserId: authData.user.id },
-              });
-          
-              if (!user) {
-                console.log("~ 🚀: Login - user not found in DB");
-                return {
-                    success: false,
-                    data: null,
-                    error: "User not found",
-                }
-              }
-
-              const session = authData.session;
-              console.log("~ 🚀: Login - session info", session);
+              supabaseUserId: z.string().uuid(),
+            });
+        
+            const validated = loginSchema.safeParse(params);
+            if (!validated.success) {
+              return {
+                success: false,
+                data: null,
+                error: validated.error.issues[0].message,
+              };
+            }
+        
+            const { supabaseUserId } = validated.data;
+        
+            // 2. Check if user exists in your own DB
+            let user = await database.user.findUnique({
+              where: { supabaseUserId },
+            });
+        
+            if (user) {
+              console.log("~ ✅: User found in DB", user.id);
               return {
                 success: true,
-                data: {
-                    user,
-                    access_token: session?.access_token,
-                    refresh_token: session?.refresh_token,
-                    expires_in: session?.expires_in,
-                    token_type: session?.token_type,
+                data: { user },
+                error: null,
+              };
+            }
+        
+            // 3. If user doesn't exist in DB, fetch from Supabase
+            const { data: supabaseUserData, error: supabaseError } = await supabase.auth.admin.getUserById(supabaseUserId);
+        
+            if (supabaseError || !supabaseUserData?.user) {
+              console.error("~ ❌: Error fetching Supabase user", supabaseError?.message);
+              return {
+                success: false,
+                data: null,
+                error: supabaseError?.message || "Supabase user not found",
+              };
+            }
+        
+            const supabaseUser = supabaseUserData.user;
+        
+            // 4. Create new user in your DB using Supabase data
+            user = await database.user.create({
+              data: {
+                supabaseUserId: supabaseUser.id,
+                email: supabaseUser.email || "", // fallback to empty string
+                name: supabaseUser.user_metadata?.full_name || "New User",
+                avatarUrl: supabaseUser.user_metadata?.avatar_url || null,
+              },
+            });
+        
+            console.log("~ ✅: New user created in DB", user.id);
+        
+            return {
+              success: true,
+              data: { user },
+              error: null,
+            };
+          } catch (error: any) {
+            console.error("~ 🚨: Login - unexpected error", error);
+            return {
+              success: false,
+              data: null,
+              error: error.message || "Unknown server error",
+            };
+          }
+        },
+        getCurrentUser: async (params: GetCurrentUserParams): Promise<APIResponse> => {
+            try {
+                console.log("~ 🚀: GetCurrentUser - validating params", params);
+                const schema = z.object({
+                    accessToken: z.string().min(1)
+                });
+                const validatedParams = schema.safeParse(params);
+                if (!validatedParams.success)
+                    return {
+                        success: false,
+                        data: null,
+                        error: validatedParams.error.issues[0].message,
+                    };
+                const { accessToken } = params;
+                console.log("~ 🚀: GetCurrentUser - getting user from Supabase", accessToken);
+                const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+                if (error || !user) {
+                    console.log("~ 🚀: GetCurrentUser - error or user not found", error);
+                    return {
+                        success: false,
+                        data: null,
+                        error: error?.message || "User not found",
+                    };
+                }
+                console.log("~ 🚀: GetCurrentUser - finding user in DB", user.id);
+                const dbUser = await database.user.findUnique({
+                    where: { supabaseUserId: user.id },
+                });
+                if (!dbUser) {
+                    console.log("~ 🚀: GetCurrentUser - user not found in DB");
+                    return {
+                        success: false,
+                        data: null,
+                        error: "User not found in database",
+                    };
+                }
+                return {
+                    success: true,
+                    data: dbUser,
+                    error: null,
+                };
+            } catch (error: any) {
+                console.log("~ 🚀: GetCurrentUser - error", error);
+                return {
+                    success: false,
+                    data: null,
+                    error: error.message || "Unknown error",
+                };
+            }
+        },
+            resetPassword: async (params: ResetPasswordParams): Promise<APIResponse> => {
+                try {
+                    console.log("~ 🚀: ResetPassword - validating params", params);
+                    const schema = z.object({
+                        email: z.string().email()
+                    });
+                    const validatedParams = schema.safeParse(params);
+                    if (!validatedParams.success)
+                        return {
+                            success: false,
+                            data: null,
+                            error: validatedParams.error.issues[0].message,
+                        };
+                    const { email } = params;
+                    console.log("~ 🚀: ResetPassword - sending reset email", email);
+                    const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+                    if (error) {
+                        console.log("~ 🚀: ResetPassword - error sending reset email", error);
+                        return {
+                            success: false,
+                            data: null,
+                            error: error.message,
+                        };
+                    }
+                    return {
+                        success: true,
+                        data,
+                        error: null,
+                    };
+                } catch (error: any) {
+                    console.log("~ 🚀: ResetPassword - error", error);
+                    return {
+                        success: false,
+                        data: null,
+                        error: error.message || "Unknown error",
+                    };
+                }
+            },
+                refreshToken: async (params: { refresh_token: string }): Promise<APIResponse> => {
+                    try {
+                        console.log("~ 🚀: RefreshToken - validating params", params);
+                        const schema = z.object({
+                            refresh_token: z.string().min(1)
+                        });
+                        const validatedParams = schema.safeParse(params);
+                        if (!validatedParams.success)
+                            return {
+                                success: false,
+                                data: null,
+                                error: validatedParams.error.issues[0].message,
+                            };
+                        const { refresh_token } = params;
+                        console.log("~ 🚀: RefreshToken - refreshing session with Supabase", refresh_token);
+                        const { data: sessionData, error } = await supabase.auth.refreshSession({ refresh_token });
+                        if (error || !sessionData.session) {
+                            console.log("~ 🚀: RefreshToken - error refreshing session", error);
+                            return {
+                                success: false,
+                                data: null,
+                                error: error?.message || "Failed to refresh session",
+                            };
+                        }
+                        const session = sessionData.session;
+                        const { user } = sessionData;
+                        if (!user) {
+                            console.log("~ 🚀: RefreshToken - user is null after refresh");
+                            return {
+                                success: false,
+                                data: null,
+                                error: "User not found",
+                            };
+                        }
+                        console.log("~ 🚀: RefreshToken - finding user in DB", user.id);
+                        const dbUser = await database.user.findUnique({
+                            where: { supabaseUserId: user.id },
+                        });
+                        if (!dbUser) {
+                            console.log("~ 🚀: RefreshToken - user not found in DB");
+                            return {
+                                success: false,
+                                data: null,
+                                error: "User not found",
+                            };
+                        }
+                        console.log("~ 🚀: RefreshToken - returning refreshed tokens");
+                        return {
+                            success: true,
+                            data: {
+                                user: dbUser,
+                                access_token: session.access_token,
+                                refresh_token: session.refresh_token,
+                                expires_in: session.expires_in,
+                                token_type: session.token_type,
+                            },
+                            error: null,
+                        };
+                    } catch (error: any) {
+                        console.log("~ 🚀: RefreshToken - error", error);
+                        return {
+                            success: false,
+                            data: null,
+                            error: error.message || "Unknown error",
+                        };
+                    }
                 },
-                error: null
-              }
-        } catch (error: any) {
-            console.log("~ 🚀: Login - error", error);
-             return {
-                success: false,
-                data: null,
-                error: error.message || "Unknown error",
-            };
-        }
-    },
-    getCurrentUser: async (params: GetCurrentUserParams): Promise<APIResponse> => {
-        try {
-            console.log("~ 🚀: GetCurrentUser - validating params", params);
-            const schema = z.object({
-                accessToken: z.string().min(1)
-            });
-            const validatedParams = schema.safeParse(params);
-            if (!validatedParams.success)
-                return {
-                    success: false,
-                    data: null,
-                    error: validatedParams.error.issues[0].message,
-                };
-            const { accessToken } = params;
-            console.log("~ 🚀: GetCurrentUser - getting user from Supabase", accessToken);
-            const { data: { user }, error } = await supabase.auth.getUser(accessToken);
-            if (error || !user) {
-                console.log("~ 🚀: GetCurrentUser - error or user not found", error);
-                return {
-                    success: false,
-                    data: null,
-                    error: error?.message || "User not found",
-                };
-            }
-            console.log("~ 🚀: GetCurrentUser - finding user in DB", user.id);
-            const dbUser = await database.user.findUnique({
-                where: { supabaseUserId: user.id },
-            });
-            if (!dbUser) {
-                console.log("~ 🚀: GetCurrentUser - user not found in DB");
-                return {
-                    success: false,
-                    data: null,
-                    error: "User not found in database",
-                };
-            }
-            return {
-                success: true,
-                data: dbUser,
-                error: null,
-            };
-        } catch (error: any) {
-            console.log("~ 🚀: GetCurrentUser - error", error);
-            return {
-                success: false,
-                data: null,
-                error: error.message || "Unknown error",
-            };
-        }
-    },
-    resetPassword: async (params: ResetPasswordParams): Promise<APIResponse> => {
-        try {
-            console.log("~ 🚀: ResetPassword - validating params", params);
-            const schema = z.object({
-                email: z.string().email()
-            });
-            const validatedParams = schema.safeParse(params);
-            if (!validatedParams.success)
-                return {
-                    success: false,
-                    data: null,
-                    error: validatedParams.error.issues[0].message,
-                };
-            const { email } = params;
-            console.log("~ 🚀: ResetPassword - sending reset email", email);
-            const { data, error } = await supabase.auth.resetPasswordForEmail(email);
-            if (error) {
-                console.log("~ 🚀: ResetPassword - error sending reset email", error);
-                return {
-                    success: false,
-                    data: null,
-                    error: error.message,
-                };
-            }
-            return {
-                success: true,
-                data,
-                error: null,
-            };
-        } catch (error: any) {
-            console.log("~ 🚀: ResetPassword - error", error);
-            return {
-                success: false,
-                data: null,
-                error: error.message || "Unknown error",
-            };
-        }
-    },
-    refreshToken: async (params: { refresh_token: string }): Promise<APIResponse> => {
-        try {
-            console.log("~ 🚀: RefreshToken - validating params", params);
-            const schema = z.object({
-                refresh_token: z.string().min(1)
-            });
-            const validatedParams = schema.safeParse(params);
-            if (!validatedParams.success)
-                return {
-                    success: false,
-                    data: null,
-                    error: validatedParams.error.issues[0].message,
-                };
-            const { refresh_token } = params;
-            console.log("~ 🚀: RefreshToken - refreshing session with Supabase", refresh_token);
-            const { data: sessionData, error } = await supabase.auth.refreshSession({ refresh_token });
-            if (error || !sessionData.session) {
-                console.log("~ 🚀: RefreshToken - error refreshing session", error);
-                return {
-                    success: false,
-                    data: null,
-                    error: error?.message || "Failed to refresh session",
-                };
-            }
-            const session = sessionData.session;
-            const { user } = sessionData;
-            if (!user) {
-                console.log("~ 🚀: RefreshToken - user is null after refresh");
-                return {
-                    success: false,
-                    data: null,
-                    error: "User not found",
-                };
-            }
-            console.log("~ 🚀: RefreshToken - finding user in DB", user.id);
-            const dbUser = await database.user.findUnique({
-                where: { supabaseUserId: user.id },
-            });
-            if (!dbUser) {
-                console.log("~ 🚀: RefreshToken - user not found in DB");
-                return {
-                    success: false,
-                    data: null,
-                    error: "User not found",
-                };
-            }
-            console.log("~ 🚀: RefreshToken - returning refreshed tokens");
-            return {
-                success: true,
-                data: {
-                    user: dbUser,
-                    access_token: session.access_token,
-                    refresh_token: session.refresh_token,
-                    expires_in: session.expires_in,
-                    token_type: session.token_type,
-                },
-                error: null,
-            };
-        } catch (error: any) {
-            console.log("~ 🚀: RefreshToken - error", error);
-            return {
-                success: false,
-                data: null,
-                error: error.message || "Unknown error",
-            };
-        }
-    },
 }
 
 export default authentication

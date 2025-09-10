@@ -8,7 +8,10 @@ import saves, {
 
 // Replace with a valid access token for a test user
 const TEST_ACCESS_TOKEN = process.env.TEST_ACCESS_TOKEN || '<YOUR_TEST_ACCESS_TOKEN>';
-const TEST_URL = 'https://example.com/test-article';
+const TEST_URL = 'https://example.com/test-article-123'; // Changed URL to avoid "URL already saved" in repeated tests
+const TEST_TITLE = "Test Article Title";
+const TEST_EXCERPT = "This is a test excerpt for the article.";
+const TEST_FAVICON_URL = "https://example.com/favicon.ico";
 
 async function runSavesTests() {
   let stats = {
@@ -26,11 +29,21 @@ async function runSavesTests() {
   const addParams: AddSaveParams = {
     url: TEST_URL,
     accessToken: TEST_ACCESS_TOKEN,
+    title: TEST_TITLE,
+    excerpt: TEST_EXCERPT,
+    favicon_url: TEST_FAVICON_URL,
   };
+  console.log('Add Save Params:', addParams); // Log params for debugging
   const addResult = await saves.addSave(addParams);
-  console.log('Add Save:', addResult);
+  console.log('Add Save Result:', addResult);
   if (addResult.success && addResult.data?.id) {
-    stats.addSave = true;
+    if (addResult.data.title === TEST_TITLE &&
+        addResult.data.excerpt === TEST_EXCERPT &&
+        addResult.data.favicon_url === TEST_FAVICON_URL) {
+      stats.addSave = true;
+    } else {
+      stats.errors.push('addSave failed: returned data mismatch');
+    }
   } else {
     stats.errors.push('addSave failed: ' + (addResult.error || 'Unknown error'));
     return printStats(stats);
@@ -44,9 +57,18 @@ async function runSavesTests() {
     limit: 10,
   };
   const allResult = await saves.getAllSaves(getAllParams);
-  console.log('Get All Saves:', allResult);
+  console.log('Get All Saves Result:', allResult);
   if (allResult.success && Array.isArray(allResult.data?.saves)) {
-    stats.getAllSaves = true;
+    const foundSave = allResult.data.saves.find(save => save.id === saveId);
+    if (foundSave &&
+        foundSave.title === TEST_TITLE &&
+        foundSave.excerpt === TEST_EXCERPT &&
+        foundSave.favicon_url === TEST_FAVICON_URL &&
+        foundSave.url === TEST_URL) {
+      stats.getAllSaves = true;
+    } else {
+      stats.errors.push('getAllSaves failed: did not find the added save with correct data');
+    }
   } else {
     stats.errors.push('getAllSaves failed: ' + (allResult.error || 'Unknown error'));
   }
@@ -57,9 +79,16 @@ async function runSavesTests() {
     accessToken: TEST_ACCESS_TOKEN,
   };
   const byIdResult = await saves.getSaveById(getByIdParams);
-  console.log('Get Save By ID:', byIdResult);
+  console.log('Get Save By ID Result:', byIdResult);
   if (byIdResult.success && byIdResult.data?.id === saveId) {
-    stats.getSaveById = true;
+    if (byIdResult.data.title === TEST_TITLE &&
+        byIdResult.data.excerpt === TEST_EXCERPT &&
+        byIdResult.data.favicon_url === TEST_FAVICON_URL &&
+        byIdResult.data.url === TEST_URL) {
+      stats.getSaveById = true;
+    } else {
+      stats.errors.push('getSaveById failed: returned data mismatch');
+    }
   } else {
     stats.errors.push('getSaveById failed: ' + (byIdResult.error || 'Unknown error'));
   }
@@ -70,7 +99,7 @@ async function runSavesTests() {
     accessToken: TEST_ACCESS_TOKEN,
   };
   const toggleResult = await saves.toggleArchive(toggleParams);
-  console.log('Toggle Archive:', toggleResult);
+  console.log('Toggle Archive Result:', toggleResult);
   if (toggleResult.success && toggleResult.data?.id === saveId) {
     stats.toggleArchive = true;
   } else {
@@ -83,7 +112,7 @@ async function runSavesTests() {
     accessToken: TEST_ACCESS_TOKEN,
   };
   const deleteResult = await saves.deleteSave(deleteParams);
-  console.log('Delete Save:', deleteResult);
+  console.log('Delete Save Result:', deleteResult);
   if (deleteResult.success) {
     stats.deleteSave = true;
   } else {

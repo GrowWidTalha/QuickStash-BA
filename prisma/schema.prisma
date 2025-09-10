@@ -35,21 +35,18 @@ model User {
 // Saved content model
 model Save {
   id          String   @id @default(cuid())
-  title       String
+  title       String?
   url         String
-  source      String
-  content     String?  // Parsed content
-  excerpt     String?  // Summary/excerpt
-  imageUrl    String?  // Featured image
+  excerpt     String?
+  favicon_url String?
   isArchived  Boolean  @default(false)
   isRead      Boolean  @default(false)
-  readTime    Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  // Relations
+  featured_image_url String
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@map("saves")
 }

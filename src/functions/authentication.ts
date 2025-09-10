@@ -166,8 +166,8 @@ const authentication = {
               data: {
                 supabaseUserId: supabaseUser.id,
                 email: supabaseUser.email || "", // fallback to empty string
-                name: supabaseUser.user_metadata?.full_name || "New User",
-                avatarUrl: supabaseUser.user_metadata?.avatar_url || null,
+                // name: supabaseUser.user_metadata?.full_name || "New User",
+                avatarUrl: supabaseUser.user_metadata?.avatar_url || `https://api.dicebear.com/9.x/glass/svg?seed=${supabaseUser.email?.split("@")[0]}`,
               },
             });
         

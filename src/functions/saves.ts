@@ -6,6 +6,10 @@ import utils from "@/lib/utils";
 export interface AddSaveParams {
   url: string;
   accessToken: string;
+  title?: string; // Made optional
+  excerpt?: string; // Made optional
+  favicon_url?: string; // New field
+  featured_image_url: string;
 }
 
 export interface GetAllSavesParams {
@@ -37,6 +41,10 @@ const saves = {
       const schema = z.object({
         url: z.string().url(),
         accessToken: z.string().min(1),
+        title: z.string().optional(),
+        excerpt: z.string().optional(),
+        featured_image_url: z.string().optional(),
+        favicon_url: z.string().optional(),
       });
       const validatedParams = schema.safeParse(params);
       if (!validatedParams.success)
@@ -45,7 +53,23 @@ const saves = {
           data: null,
           error: validatedParams.error.issues[0].message,
         };
-      const { url, accessToken } = params;
+      let { url, accessToken, title, excerpt, favicon_url, featured_image_url } = params;
+      if(!title && !excerpt && !favicon_url && !featured_image_url){
+        console.log("~ 🚀: addSave - fetching metadata on the backend")
+        const parseRes = await fetch(process.env.NEXT_PUBLIC_SERVER_URL + '/api/parse-url', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url }),
+        });
+        const {data} = await parseRes.json();
+        console.log({data})
+        title = data.title
+        favicon_url = data.favicon_url
+        excerpt = data.excerpt
+        featured_image_url = data.featured_image_url
+      }
       // Get current user from token
       console.log("~ 🚀: addSave - getting user from token", accessToken);
       const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
@@ -86,24 +110,18 @@ const saves = {
           error: "URL already saved",
         };
       }
-      // Fetch and parse the URL
-      console.log("~ 🚀: addSave - fetching and parsing URL", url);
-      const parsedContent = await utils.fetchAndParseUrl(url);
-      console.log(parsedContent)
       // Create save record
       console.log("~ 🚀: addSave - creating save record in DB");
       const save = await database.save.create({
         data: {
-          title: parsedContent.title,
-          url: parsedContent.url,
-          content: parsedContent.content,
-          excerpt: parsedContent.excerpt,
-          imageUrl: parsedContent.imageUrl,
+          title,
+          url,
+          excerpt,
+          favicon_url,
           userId: dbUser.id,
           isRead: false,
           isArchived: false,
-          readTime: parsedContent.readTime,
-          source: parsedContent.source
+          featured_image_url: featured_image_url,
         },
       });
       console.log("~ 🚀: addSave - save created", save.id);
@@ -114,7 +132,7 @@ const saves = {
           title: save.title,
           url: save.url,
           excerpt: save.excerpt,
-          imageUrl: save.imageUrl,
+          favicon_url: save.favicon_url, // Include new field
           isArchived: save.isArchived,
           createdAt: save.createdAt,
         },
@@ -188,13 +206,12 @@ const saves = {
           title: true,
           url: true,
           excerpt: true,
-          imageUrl: true,
+          favicon_url: true, // Added new field
+          featured_image_url: true,
           isArchived: true,
           createdAt: true,
           updatedAt: true,
           isRead: true,
-          readTime: true,
-          source: true
         },
       });
       // Get total count
@@ -267,6 +284,18 @@ const saves = {
         where: {
           id,
           userId: dbUser.id,
+        },
+        select: { // Explicitly selecting fields to match updated schema and other save functions
+          id: true,
+          title: true,
+          url: true,
+          excerpt: true,
+          favicon_url: true,
+          featured_image_url: true,
+          isArchived: true,
+          createdAt: true,
+          updatedAt: true,
+          isRead: true,
         },
       });
       if (!save) {

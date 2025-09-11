@@ -34,6 +34,18 @@ export interface ToggleArchiveParams {
   accessToken: string;
 }
 
+export interface UpdateSaveParams {
+  id: string;
+  accessToken: string;
+  title?: string;
+  excerpt?: string;
+  favicon_url?: string;
+  featured_image_url?: string;
+  isRead?: boolean;
+  isArchived?: boolean;
+}
+
+
 const saves = {
   addSave: async (params: AddSaveParams): Promise<APIResponse> => {
     try {
@@ -466,6 +478,113 @@ const saves = {
         success: false,
         data: null,
         error: error.message || "Failed to update archive status",
+      };
+    }
+  },
+  updateSave: async (params: UpdateSaveParams): Promise<APIResponse> => {
+    try {
+      console.log("~ 🚀: updateSave - validating params", params);
+      const schema = z.object({
+        id: z.string().min(1),
+        accessToken: z.string().min(1),
+        title: z.string().optional(),
+        excerpt: z.string().optional(),
+        favicon_url: z.string().optional(),
+        featured_image_url: z.string().optional(),
+        isRead: z.boolean().optional(),
+        isArchived: z.boolean().optional(),
+      });
+      const validatedParams = schema.safeParse(params);
+      if (!validatedParams.success) {
+        return {
+          success: false,
+          data: null,
+          error: validatedParams.error.issues[0].message,
+        };
+      }
+
+      const { id, accessToken, title, excerpt, favicon_url, featured_image_url, isRead, isArchived } = params;
+
+      // Get current user from token
+      console.log("~ 🚀: updateSave - getting user from token", accessToken);
+      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+      if (authError || !user) {
+        console.log("~ 🚀: updateSave - invalid token or user not found", authError);
+        return {
+          success: false,
+          data: null,
+          error: "Invalid token",
+        };
+      }
+
+      // Get user from database
+      console.log("~ 🚀: updateSave - finding user in DB", user.id);
+      const dbUser = await database.user.findUnique({
+        where: { supabaseUserId: user.id },
+      });
+      if (!dbUser) {
+        console.log("~ 🚀: updateSave - user not found in DB");
+        return {
+          success: false,
+          data: null,
+          error: "User not found",
+        };
+      }
+
+      // Get current save
+      console.log("~ 🚀: updateSave - fetching current save", id);
+      const currentSave = await database.save.findFirst({
+        where: { id, userId: dbUser.id },
+      });
+      if (!currentSave) {
+        console.log("~ 🚀: updateSave - save not found");
+        return {
+          success: false,
+          data: null,
+          error: "Save not found",
+        };
+      }
+
+      // Build update payload (only update provided fields)
+      const updateData: any = {};
+      if (title !== undefined) updateData.title = title;
+      if (excerpt !== undefined) updateData.excerpt = excerpt;
+      if (favicon_url !== undefined) updateData.favicon_url = favicon_url;
+      if (featured_image_url !== undefined) updateData.featured_image_url = featured_image_url;
+      if (isRead !== undefined) updateData.isRead = isRead;
+      if (isArchived !== undefined) updateData.isArchived = isArchived;
+
+
+      console.log("~ 🚀: updateSave - updating save", updateData);
+
+      const updatedSave = await database.save.update({
+        where: { id },
+        data: updateData,
+        select: {
+          id: true,
+          title: true,
+          url: true,
+          excerpt: true,
+          favicon_url: true,
+          featured_image_url: true,
+          isArchived: true,
+          isRead: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      return {
+        success: true,
+        data: updatedSave,
+        error: null,
+      };
+    } catch (error: any) {
+      console.log("~ 🚀: updateSave - error", error);
+      return {
+        success: false,
+        data: null,
+        error: error.message || "Failed to update save",
       };
     }
   },

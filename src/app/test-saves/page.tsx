@@ -71,10 +71,10 @@ export default function TestSavesPage() {
         return;
       }
 
-      const { title, excerpt, favicon_url, featured_image_url } = parseData.data;
+      const { title, excerpt, favicon_url, featured_image_url, final_url } = parseData.data;
 
       // Then, call the addSave API with the retrieved metadata
-      await callApi('addSave', { url, title, excerpt, favicon_url, featured_image_url });
+      await callApi('addSave', { url: final_url, title, excerpt, favicon_url, featured_image_url });
     } catch (error: any) {
       setResponse({ success: false, data: null, error: error.message || 'Error during URL parsing' });
     } finally {

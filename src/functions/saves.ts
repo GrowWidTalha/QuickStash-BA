@@ -81,6 +81,7 @@ const saves = {
         favicon_url = data.favicon_url
         excerpt = data.excerpt
         featured_image_url = data.featured_image_url
+        url = data.final_url
       }
       // Get current user from token
       console.log("~ 🚀: addSave - getting user from token", accessToken);

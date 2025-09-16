@@ -280,7 +280,7 @@ async function http1GetFollow(
 
 /* ---------- resolveFinalUrl: fetch with fallback to HTTP/1.1 ---------- */
 
-export async function resolveFinalUrl(inputUrl: string) {
+async function resolveFinalUrl(inputUrl: string) {
   console.log(`~~ 🚀~~ STEP ~~ resolveFinalUrl starting for: ${inputUrl}`);
 
   // First attempt: fetch() (may use HTTP/2). On specific failures, fall back to HTTP/1.1 manual logic.

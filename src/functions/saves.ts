@@ -218,8 +218,8 @@ const saves = {
       const saves = await database.save.findMany({
         where,
         orderBy: { createdAt: "desc" },
-        skip: offset,
-        take: limit,
+        // skip: offset,
+        // take: limit,
         select: {
           id: true,
           title: true,

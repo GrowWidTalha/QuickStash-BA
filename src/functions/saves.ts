@@ -9,7 +9,7 @@ export interface AddSaveParams {
   title?: string; // Made optional
   excerpt?: string; // Made optional
   favicon_url?: string; // New field
-  featured_image_url: string;
+  featured_image_url?: string;
   isFetchingAllowed?: boolean;
 }
 
@@ -78,11 +78,11 @@ const saves = {
           body: JSON.stringify({ url }),
         });
         const {data} = await parseRes.json();
-        console.log({data})
+        console.log({"parsed Data: ": data})
         title = data.title
-        favicon_url = data.favicon_url
+        favicon_url = data.favicon
         excerpt = data.excerpt
-        featured_image_url = data.featured_image_url
+        featured_image_url = data.featuredImage
         url = data.final_url
         isFetchingAllowed = data.isFetchingAllowed
       }
@@ -152,6 +152,8 @@ const saves = {
           favicon_url: save.favicon_url, // Include new field
           isArchived: save.isArchived,
           createdAt: save.createdAt,
+          isFetchingAllowed: save.isFetchingAllowed,
+          featured_image_url: save.featured_image_url,
         },
         error: null,
       };
@@ -229,6 +231,7 @@ const saves = {
           createdAt: true,
           updatedAt: true,
           isRead: true,
+          isFetchingAllowed: true,
         },
       });
       // Get total count
@@ -313,6 +316,7 @@ const saves = {
           createdAt: true,
           updatedAt: true,
           isRead: true,
+          isFetchingAllowed: true,
         },
       });
       if (!save) {

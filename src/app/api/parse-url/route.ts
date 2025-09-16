@@ -403,7 +403,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         data: {
-          url: finalUrl,
+          final_url: finalUrl,
           title: title || null,
           featuredImage: featured || null,
           favicon: favicon || null,
@@ -460,7 +460,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({
             success: true,
             data: {
-              url: finalUrl,
+              final_url: finalUrl,
               title: finalUrl,
               featuredImage: DEFAULT_PLACEHOLDER_IMAGE,
               accept: acceptHeaderValue,
@@ -473,7 +473,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
           success: true,
           data: {
-            url: finalUrl,
+            final_url: finalUrl,
             title: title || finalUrl,
             featuredImage: featuredImage || DEFAULT_PLACEHOLDER_IMAGE,
             favicon: favicon || null,
@@ -486,7 +486,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
           success: true,
           data: {
-            url: finalUrl,
+            final_url: finalUrl,
             title: finalUrl,
             featuredImage: DEFAULT_PLACEHOLDER_IMAGE,
             accept: acceptHeaderValue,

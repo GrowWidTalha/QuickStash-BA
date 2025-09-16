@@ -55,26 +55,26 @@ export default function TestSavesPage() {
     setResponse(null);
     try {
       // First, call the new parse-url API to get metadata
-      const parseRes = await fetch('/api/parse-url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url }),
-      });
-      const parseData = await parseRes.json();
-      console.log(parseData)
+      // const parseRes = await fetch('/api/parse-url', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ url }),
+      // });
+      // const parseData = await parseRes.json();
+      // console.log(parseData)
 
-      if (!parseData.success) {
-        setResponse({ success: false, data: null, error: parseData.error || 'Failed to parse URL metadata' });
-        setLoadingParse(false);
-        return;
-      }
+      // if (!parseData.success) {
+      //   setResponse({ success: false, data: null, error: parseData.error || 'Failed to parse URL metadata' });
+      //   setLoadingParse(false);
+      //   return;
+      // }
 
-      const { title, excerpt, favicon_url, featured_image_url, final_url } = parseData.data;
+      // const { title, excerpt, favicon_url, featured_image_url, final_url, isFetchingAllowed } = parseData.data;
 
       // Then, call the addSave API with the retrieved metadata
-      await callApi('addSave', { url: final_url, title, excerpt, favicon_url, featured_image_url });
+      await callApi('addSave', { url: url });
     } catch (error: any) {
       setResponse({ success: false, data: null, error: error.message || 'Error during URL parsing' });
     } finally {

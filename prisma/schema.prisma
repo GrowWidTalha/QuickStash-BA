@@ -43,7 +43,7 @@ model Save {
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  featured_image_url String
+  featured_image_url String?
   isFetchingAllowed Boolean  @default(false)
 
   userId String

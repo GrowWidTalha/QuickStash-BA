@@ -3,12 +3,12 @@ import * as cheerio from "cheerio";
 import http from "http";
 import https from "https";
 import { URL } from "url";
+import robotsParser from "robots-parser"; // npm i robots-parser
 
 /**
- * Simple in-memory robots cache (note: ephemeral in serverless environments).
- * Cache entries: { text: string, fetchedAt: number }
+ * Simple in-memory robots cache (ephemeral in serverless).
  */
-const ROBOTS_CACHE_TTL_MS = 60 * 1000; // 60s TTL - tune as needed
+const ROBOTS_CACHE_TTL_MS = 60 * 1000; // tune as needed
 const robotsCache = new Map<string, { text: string; fetchedAt: number }>();
 
 const DEFAULT_PLACEHOLDER_IMAGE = "https://example.com/image-not-available.png";
@@ -16,123 +16,10 @@ const FETCHER_USER_AGENT = "Mozilla/5.0 (compatible; TurboLaunchFetcher/1.0)";
 const BROWSER_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36";
 
-/* ---------- Utilities: robots parsing & HTML extraction (unchanged except logs) ---------- */
-
-function parseRobotsTxt(text: string) {
-  console.log("~~ 🚀~~ STEP ~~ Parsing robots.txt content");
-  const lines = text.split(/\r?\n/).map((l) => l.split("#")[0].trim());
-  const groups: Array<{ userAgents: string[]; rules: Array<{ type: "allow" | "disallow"; path: string }> }> = [];
-
-  let currentGroup: { userAgents: string[]; rules: Array<{ type: "allow" | "disallow"; path: string }> } | null = null;
-
-  for (const raw of lines) {
-    if (!raw) continue;
-    const [keyRaw, ...rest] = raw.split(":");
-    if (!keyRaw || rest.length === 0) continue;
-    const key = keyRaw.trim().toLowerCase();
-    const value = rest.join(":").trim();
-
-    if (key === "user-agent") {
-      if (!currentGroup) {
-        currentGroup = { userAgents: [], rules: [] };
-        groups.push(currentGroup);
-      }
-      currentGroup.userAgents.push(value.toLowerCase());
-    } else if (key === "allow" || key === "disallow") {
-      if (!currentGroup) {
-        currentGroup = { userAgents: ["*"], rules: [] };
-        groups.push(currentGroup);
-      }
-      currentGroup.rules.push({ type: key === "allow" ? "allow" : "disallow", path: value });
-    } else {
-      // ignore other directives for now
-    }
-  }
-
-  console.log(`~~ 🚀~~ STEP ~~ Parsed robots.txt into ${groups.length} group(s)`);
-  return groups;
-}
-
-function isPathAllowedForUserAgent(groups: ReturnType<typeof parseRobotsTxt>, userAgent: string, path: string) {
-  console.log(`~~ 🚀~~ STEP ~~ Evaluating robots rules for UA="${userAgent}" and path="${path}"`);
-  const ua = userAgent.toLowerCase();
-  const normalizedPath = path || "/";
-
-  let chosenGroup = null;
-  let bestUaMatchLength = -1;
-  for (const g of groups) {
-    for (const u of g.userAgents) {
-      if (u !== "*" && ua.includes(u)) {
-        if (u.length > bestUaMatchLength) {
-          bestUaMatchLength = u.length;
-          chosenGroup = g;
-        }
-      }
-    }
-  }
-
-  if (!chosenGroup) chosenGroup = groups.find((g) => g.userAgents.includes("*")) || null;
-
-  if (!chosenGroup || !chosenGroup.rules || chosenGroup.rules.length === 0) {
-    console.log("~~ 🚀~~ STEP ~~ No matching robots group or no rules → ALLOW by default");
-    return true;
-  }
-
-  const matches = chosenGroup.rules
-    .map((r) => {
-      const rp = r.path === "" ? "/" : r.path;
-      if (normalizedPath.startsWith(rp)) {
-        return { ...r, matchLength: rp.length };
-      }
-      return null;
-    })
-    .filter(Boolean) as Array<{ type: "allow" | "disallow"; path: string; matchLength: number }>;
-
-  if (matches.length === 0) {
-    console.log("~~ 🚀~~ STEP ~~ No rules match this path → ALLOW");
-    return true;
-  }
-
-  matches.sort((a, b) => b.matchLength - a.matchLength || (a.type === "allow" ? -1 : 1));
-  console.log(`~~ 🚀~~ STEP ~~ Matched rule: ${matches[0].type} (length=${matches[0].matchLength})`);
-  return matches[0].type === "allow";
-}
-
-async function fetchRobotsTxt(origin: string) {
-  console.log(`~~ 🚀~~ STEP ~~ Fetching robots.txt from origin: ${origin}`);
-  const cached = robotsCache.get(origin);
-  const now = Date.now();
-  if (cached && now - cached.fetchedAt < ROBOTS_CACHE_TTL_MS) {
-    console.log("~~ 🚀~~ STEP ~~ Using cached robots.txt");
-    return cached.text;
-  }
-
-  const robotsUrl = new URL("/robots.txt", origin).toString();
-  try {
-    console.log(`~~ 🚀~~ STEP ~~ Requesting ${robotsUrl}`);
-    const res = await fetch(robotsUrl, {
-      method: "GET",
-      headers: { "User-Agent": FETCHER_USER_AGENT, Accept: "text/plain,*/*" },
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      console.log(`~~ 🚀~~ STEP ~~ robots.txt returned ${res.status} → treat as missing (allow by default)`);
-      robotsCache.set(origin, { text: "", fetchedAt: now });
-      return "";
-    }
-    const txt = await res.text();
-    robotsCache.set(origin, { text: txt, fetchedAt: now });
-    console.log("~~ 🚀~~ STEP ~~ robots.txt fetched and cached");
-    return txt;
-  } catch (err) {
-    console.error("~~ 🚀~~ STEP ~~ Error fetching robots.txt:", err);
-    robotsCache.set(origin, { text: "", fetchedAt: now });
-    return "";
-  }
-}
+/* ---------------------- helpers (unchanged) ---------------------- */
 
 function extractFromHtml(html: string, baseUrl: string) {
-  console.log("~~ 🚀~~ STEP ~~ Extracting metadata from HTML");
+  console.log("~~ STEP ~~ Extracting metadata from HTML");
   const $ = cheerio.load(html);
 
   const title =
@@ -186,8 +73,8 @@ function extractFromHtml(html: string, baseUrl: string) {
     featured = null;
   }
 
-  console.log(`~~ 🚀~~ STEP ~~ Extracted title: ${title ? title.substring(0, 100) : "null"}`);
-  console.log(`~~ 🚀~~ STEP ~~ Extracted featured image: ${featured ? featured : "null"}`);
+  console.log(`~~ STEP ~~ Extracted title: ${title ? title.substring(0, 100) : "null"}`);
+  console.log(`~~ STEP ~~ Extracted featured image: ${featured ? featured : "null"}`);
 
   return { title, excerpt, favicon, featured };
 }
@@ -208,7 +95,7 @@ async function http1GetFollow(
 
   let currentUrl = inputUrl;
   for (let redirectCount = 0; redirectCount < maxRedirects; redirectCount++) {
-    console.log(`~~ 🚀~~ STEP ~~ HTTP/1.1 request attempt for: ${currentUrl} (redirect #${redirectCount})`);
+    console.log(`~~ STEP ~~ HTTP/1.1 request attempt for: ${currentUrl} (redirect #${redirectCount})`);
 
     const urlObj = new URL(currentUrl);
     const isHttps = urlObj.protocol === "https:";
@@ -264,7 +151,7 @@ async function http1GetFollow(
       }
       try {
         currentUrl = new URL(loc, currentUrl).toString();
-        console.log(`~~ 🚀~~ STEP ~~ HTTP/1.1 redirect → ${currentUrl}`);
+        console.log(`~~ STEP ~~ HTTP/1.1 redirect → ${currentUrl}`);
         continue;
       } catch {
         return { finalUrl: currentUrl, statusCode, headers: resHeaders, body };
@@ -274,18 +161,18 @@ async function http1GetFollow(
     return { finalUrl: currentUrl, statusCode, headers: resHeaders, body };
   }
 
-  console.log("~~ 🚀~~ STEP ~~ HTTP/1.1 follow redirects exceeded");
+  console.log("~~ STEP ~~ HTTP/1.1 follow redirects exceeded");
   return { finalUrl: currentUrl, statusCode: 0, headers: {}, body: "" };
 }
 
 /* ---------- resolveFinalUrl: fetch with fallback to HTTP/1.1 ---------- */
 
 async function resolveFinalUrl(inputUrl: string) {
-  console.log(`~~ 🚀~~ STEP ~~ resolveFinalUrl starting for: ${inputUrl}`);
+  console.log(`~~ STEP ~~ resolveFinalUrl starting for: ${inputUrl}`);
 
   // First attempt: fetch() (may use HTTP/2). On specific failures, fall back to HTTP/1.1 manual logic.
   try {
-    console.log(`~~ 🚀~~ STEP ~~ Trying fetch() to resolve: ${inputUrl}`);
+    console.log(`~~ STEP ~~ Trying fetch() to resolve: ${inputUrl}`);
     const res = await fetch(inputUrl, {
       method: "GET",
       redirect: "follow",
@@ -295,60 +182,93 @@ async function resolveFinalUrl(inputUrl: string) {
         "Accept-Language": "en-US,en;q=0.9",
         Referer: "https://www.google.com/",
       },
-      // cache: "no-store" // optional
     });
 
     const finalUrl = res.url || inputUrl;
-    console.log(`~~ 🚀~~ STEP ~~ fetch() resolved final URL: ${finalUrl} (status ${res.status})`);
+    console.log(`~~ STEP ~~ fetch() resolved final URL: ${finalUrl} (status ${res.status})`);
 
-    // Read body if small — but be tolerant of errors reading (we still return finalUrl)
     let html: string | undefined;
     try {
       html = await res.text();
     } catch (err) {
-      console.warn("~~ 🚀~~ STEP ~~ fetch() read body failed:", err);
+      console.warn("~~ STEP ~~ fetch() read body failed:", err);
       html = undefined;
     }
 
     return { finalUrl, html };
   } catch (err: any) {
     const msg = err?.message || String(err);
-    console.error(`~~ 🚀~~ STEP ~~ fetch() failed: ${msg}`);
+    console.error(`~~ STEP ~~ fetch() failed: ${msg}`);
 
     // Fall back to HTTP/1.1 GET if error looks like TLS/HTTP2/socket issue or on generic failure
-    console.log("~~ 🚀~~ STEP ~~ Falling back to HTTP/1.1 GET (http1GetFollow)");
+    console.log("~~ STEP ~~ Falling back to HTTP/1.1 GET (http1GetFollow)");
     try {
       const resp = await http1GetFollow(inputUrl, {
         headers: { Referer: "https://www.google.com/" },
         maxRedirects: 6,
         timeoutMs: 12_000,
       });
-      console.log(`~~ 🚀~~ STEP ~~ HTTP/1.1 fallback resolved final URL: ${resp.finalUrl} (status ${resp.statusCode})`);
+      console.log(`~~ STEP ~~ HTTP/1.1 fallback resolved final URL: ${resp.finalUrl} (status ${resp.statusCode})`);
       return { finalUrl: resp.finalUrl, html: resp.body || undefined };
     } catch (fallbackErr: any) {
-      console.error("~~ 🚀~~ STEP ~~ HTTP/1.1 fallback also failed:", fallbackErr);
+      console.error("~~ STEP ~~ HTTP/1.1 fallback also failed:", fallbackErr);
       // give up — return inputUrl as final
       return { finalUrl: inputUrl, html: undefined };
     }
   }
 }
 
-/* ---------- Main route handler (uses resolveFinalUrl) ---------- */
+/* ---------------------- robots.txt fetch (cached) ---------------------- */
+
+async function fetchRobotsTxt(origin: string) {
+  console.log(`~~ STEP ~~ Fetching robots.txt from origin: ${origin}`);
+  const cached = robotsCache.get(origin);
+  const now = Date.now();
+  if (cached && now - cached.fetchedAt < ROBOTS_CACHE_TTL_MS) {
+    console.log("~~ STEP ~~ Using cached robots.txt");
+    return cached.text;
+  }
+
+  const robotsUrl = new URL("/robots.txt", origin).toString();
+  try {
+    console.log(`~~ STEP ~~ Requesting ${robotsUrl}`);
+    const res = await fetch(robotsUrl, {
+      method: "GET",
+      headers: { "User-Agent": FETCHER_USER_AGENT, Accept: "text/plain,*/*" },
+      redirect: "follow",
+    });
+    if (!res.ok) {
+      console.log(`~~ STEP ~~ robots.txt returned ${res.status} → treat as missing (allow by default)`);
+      robotsCache.set(origin, { text: "", fetchedAt: now });
+      return "";
+    }
+    const txt = await res.text();
+    robotsCache.set(origin, { text: txt, fetchedAt: now });
+    console.log("~~ STEP ~~ robots.txt fetched and cached");
+    return txt;
+  } catch (err) {
+    console.error("~~ STEP ~~ Error fetching robots.txt:", err);
+    robotsCache.set(origin, { text: "", fetchedAt: now });
+    return "";
+  }
+}
+
+/* ---------------------- Main route handler (uses robots-parser library) ---------------------- */
 
 export async function POST(req: NextRequest) {
-  console.log("~~ 🚀~~ STEP ~~ POST handler invoked");
+  console.log("~~ STEP ~~ POST handler invoked");
   try {
     const { url } = await req.json();
-    console.log(`~~ 🚀~~ STEP ~~ Received payload with url: ${url}`);
+    console.log(`~~ STEP ~~ Received payload with url: ${url}`);
 
     if (!url) {
-      console.log("~~ 🚀~~ STEP ~~ Missing URL in request → returning 400");
+      console.log("~~ STEP ~~ Missing URL in request → returning 400");
       return NextResponse.json({ success: false, error: "URL is required" }, { status: 400 });
     }
 
     // Resolve final URL (with HTTP/1.1 fallback) and possibly get HTML body
     const { finalUrl, html: resolvedHtml } = await resolveFinalUrl(url);
-    console.log(`~~ 🚀~~ STEP ~~ Resolved finalUrl=${finalUrl}`);
+    console.log(`~~ STEP ~~ Resolved finalUrl=${finalUrl}`);
 
     // Normalize final URL
     let origin: string;
@@ -357,27 +277,33 @@ export async function POST(req: NextRequest) {
       const u = new URL(finalUrl);
       origin = u.origin;
       pathname = u.pathname + (u.search || "");
-      console.log(`~~ 🚀~~ STEP ~~ Normalized final URL origin=${origin}, path=${pathname}`);
+      console.log(`~~ STEP ~~ Normalized final URL origin=${origin}, path=${pathname}`);
     } catch {
-      console.log("~~ 🚀~~ STEP ~~ Invalid final URL after redirects → returning 400");
+      console.log("~~ STEP ~~ Invalid final URL after redirects → returning 400");
       return NextResponse.json({ success: false, error: "Invalid final URL after redirects" }, { status: 400 });
     }
 
-    // 2) Fetch & parse robots.txt for final origin
+    // Fetch robots.txt (cached)
     const robotsText = await fetchRobotsTxt(origin);
-    const groups = parseRobotsTxt(robotsText);
+    const robotsTxtUrl = new URL("/robots.txt", origin).toString();
 
-    const allowed = isPathAllowedForUserAgent(groups, FETCHER_USER_AGENT, pathname);
-    console.log(`~~ 🚀~~ STEP ~~ robots.txt allowed=${allowed}`);
+    // Use library to decide allow/disallow
+    // robots-parser expects (robotsUrl, robotsTxtString)
+    // isAllowed(url, userAgent) -> boolean | undefined
+    const robots = robotsParser(robotsTxtUrl, robotsText || "");
+    let allowed = robots.isAllowed(finalUrl, FETCHER_USER_AGENT);
+    // robots-parser may return undefined for invalid url -> treat undefined as true (allow)
+    if (typeof allowed === "undefined") allowed = true;
+
+    console.log(`~~ STEP ~~ robots-parser decision isAllowed=${allowed}`);
 
     const acceptHeaderValue = "text/html";
     let html = resolvedHtml;
 
-    // If allowed and we don't have HTML yet, fetch it (use conservative headers)
     if (allowed) {
-      console.log("~~ 🚀~~ STEP ~~ Fetching HTML because robots allowed access");
+      // Allowed: fetch HTML if needed, extract metadata and return
+      console.log("~~ STEP ~~ robots allowed access → fetching HTML if not already available");
       if (!html) {
-        console.log("~~ 🚀~~ STEP ~~ No resolved HTML available → issuing GET (with Connection: close)");
         try {
           const r = await fetch(finalUrl, {
             method: "GET",
@@ -392,14 +318,14 @@ export async function POST(req: NextRequest) {
           if (!r.ok) throw new Error(`Failed to fetch final URL: ${r.statusText}`);
           html = await r.text();
         } catch (err) {
-          console.error("~~ 🚀~~ STEP ~~ GET failed when fetching HTML:", err);
+          console.error("~~ STEP ~~ GET failed when fetching HTML:", err);
           return NextResponse.json({ success: false, error: "Failed to fetch final HTML" }, { status: 500 });
         }
       }
 
       const { title, excerpt, favicon, featured } = extractFromHtml(html!, finalUrl);
 
-      console.log("~~ 🚀~~ STEP ~~ Returning successful response (isFetchingAllowed: true)");
+      console.log("~~ STEP ~~ Returning successful response (isFetchingAllowed: true)");
       return NextResponse.json({
         success: true,
         data: {
@@ -413,11 +339,13 @@ export async function POST(req: NextRequest) {
         },
       });
     } else {
-      // Not allowed by robots.txt — best-effort fallback
-      console.log("~~ 🚀~~ STEP ~~ robots.txt disallows crawling → attempting best-effort fallback (per spec)");
+      // Disallowed by robots.txt — still attempt best-effort fallback (preserve previous behavior).
+      // NOTE: if you want strict behaviour, change this to return immediately with isFetchingAllowed:false
+      console.log("~~ STEP ~~ robots disallow access → performing best-effort fallback (isFetchingAllowed: false)");
+
       try {
         if (!html) {
-          console.log("~~ 🚀~~ STEP ~~ No resolved HTML available for fallback → issuing GET (minimal headers)");
+          console.log("~~ STEP ~~ No resolved HTML available for fallback → issuing minimal GET (may still be served)");
           try {
             const r = await fetch(finalUrl, {
               method: "GET",
@@ -432,10 +360,10 @@ export async function POST(req: NextRequest) {
             if (r.ok) {
               html = await r.text();
             } else {
-              console.log(`~~ 🚀~~ STEP ~~ Fallback GET returned status ${r.status}`);
+              console.log(`~~ STEP ~~ Fallback GET returned status ${r.status}`);
             }
           } catch (err) {
-            console.warn("~~ 🚀~~ STEP ~~ Fallback GET threw:", err);
+            console.warn("~~ STEP ~~ Fallback GET threw:", err);
           }
         }
 
@@ -445,18 +373,18 @@ export async function POST(req: NextRequest) {
 
         if (html) {
           try {
-            console.log("~~ 🚀~~ STEP ~~ Fallback HTML available — extracting metadata");
+            console.log("~~ STEP ~~ Fallback HTML available — extracting metadata");
             const extracted = extractFromHtml(html, finalUrl);
             title = extracted.title;
             featuredImage = extracted.featured;
             favicon = extracted.favicon;
           } catch (parseErr) {
-            console.warn("~~ 🚀~~ STEP ~~ Parsing fallback HTML failed", parseErr);
+            console.warn("~~ STEP ~~ Parsing fallback HTML failed", parseErr);
           }
         }
 
         if (!title && !featuredImage) {
-          console.log("~~ 🚀~~ STEP ~~ No useful metadata from fallback → returning strict fallback object");
+          console.log("~~ STEP ~~ No useful metadata from fallback → returning strict fallback object");
           return NextResponse.json({
             success: true,
             data: {
@@ -469,7 +397,7 @@ export async function POST(req: NextRequest) {
           });
         }
 
-        console.log("~~ 🚀~~ STEP ~~ Returning best-effort metadata with isFetchingAllowed: false");
+        console.log("~~ STEP ~~ Returning best-effort metadata with isFetchingAllowed: false");
         return NextResponse.json({
           success: true,
           data: {
@@ -482,7 +410,7 @@ export async function POST(req: NextRequest) {
           },
         });
       } catch (err) {
-        console.error("~~ 🚀~~ STEP ~~ Fallback fetch failed entirely:", err);
+        console.error("~~ STEP ~~ Fallback fetch failed entirely:", err);
         return NextResponse.json({
           success: true,
           data: {
@@ -496,7 +424,7 @@ export async function POST(req: NextRequest) {
       }
     }
   } catch (error: any) {
-    console.error("~~ 🚀~~ STEP ~~ Error parsing URL:", error);
+    console.error("~~ STEP ~~ Error parsing URL:", error);
     return NextResponse.json({ success: false, error: error?.message || String(error) }, { status: 500 });
   }
 }

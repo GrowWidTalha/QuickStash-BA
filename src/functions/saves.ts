@@ -10,6 +10,7 @@ export interface AddSaveParams {
   excerpt?: string; // Made optional
   favicon_url?: string; // New field
   featured_image_url: string;
+  isFetchingAllowed?: boolean;
 }
 
 export interface GetAllSavesParams {
@@ -57,6 +58,7 @@ const saves = {
         excerpt: z.string().optional(),
         featured_image_url: z.string().optional(),
         favicon_url: z.string().optional(),
+        isFetchingAllowed: z.boolean().optional(),
       });
       const validatedParams = schema.safeParse(params);
       if (!validatedParams.success)
@@ -65,8 +67,8 @@ const saves = {
           data: null,
           error: validatedParams.error.issues[0].message,
         };
-      let { url, accessToken, title, excerpt, favicon_url, featured_image_url } = params;
-      if(!title && !excerpt && !favicon_url && !featured_image_url){
+      let { url, accessToken, title, excerpt, favicon_url, featured_image_url, isFetchingAllowed } = params;
+      if(!title && !excerpt && !favicon_url && !featured_image_url && !isFetchingAllowed){
         console.log("~ 🚀: addSave - fetching metadata on the backend")
         const parseRes = await fetch(process.env.NEXT_PUBLIC_SERVER_URL + '/api/parse-url', {
           method: 'POST',
@@ -82,6 +84,7 @@ const saves = {
         excerpt = data.excerpt
         featured_image_url = data.featured_image_url
         url = data.final_url
+        isFetchingAllowed = data.isFetchingAllowed
       }
       // Get current user from token
       console.log("~ 🚀: addSave - getting user from token", accessToken);
@@ -135,6 +138,7 @@ const saves = {
           isRead: false,
           isArchived: false,
           featured_image_url: featured_image_url,
+          isFetchingAllowed: isFetchingAllowed,
         },
       });
       console.log("~ 🚀: addSave - save created", save.id);

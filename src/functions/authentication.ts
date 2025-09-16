@@ -55,11 +55,6 @@ const authentication = {
             }
 
             let supabaseUserId: string;
-            let session: any = null;
-            let access_token: string | null = null;
-            let refresh_token: string | null = null;
-            let expires_in: number | null = null;
-            let token_type: string | null = null;
 
             const foundUser = authData && authData.users
                 ? authData.users.find((user: any) => user.email === email)

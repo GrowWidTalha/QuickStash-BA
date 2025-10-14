@@ -1,0 +1,811 @@
+{
+  "summary": {
+    "startedAt": "2025-10-14T12:23:05.966Z",
+    "endpoint": "http://localhost:3000/api/parse-url",
+    "concurrency": 3,
+    "timeoutMs": 15000,
+    "totals": {
+      "count": 25,
+      "success": 23,
+      "failed": 2
+    },
+    "endedAt": "2025-10-14T12:23:50.661Z",
+    "durationMs": 44696
+  },
+  "results": [
+    {
+      "url": "https://www.businessinsider.com/klarna-ceo-uses-vibe-coding-tools-cursor-product-iterations-2025-9",
+      "startedAt": "2025-10-14T12:23:06.008Z",
+      "endedAt": "2025-10-14T12:23:16.220Z",
+      "durationMs": 10212,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.businessinsider.com/klarna-ceo-uses-vibe-coding-tools-cursor-product-iterations-2025-9",
+        "title": "Klarna's CEO Says He Uses Vibe Coding Tools to Save His Engineers Time - Business Insider",
+        "featuredImage": "https://i.insider.com/68c78debf9db348adc0b7317?width=1200&format=jpeg",
+        "favicon": "https://www.businessinsider.com/public/assets/BI/US/favicons/apple-touch-icon-192x192.png?v=2025-05",
+        "accept": "text/html",
+        "isFetchingAllowed": false,
+        "extractability": {
+          "status": "disallowed",
+          "reasons": [
+            "paywalled"
+          ],
+          "blockedBy": [
+            "paywall"
+          ]
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "disallowed",
+        "reasons": [
+          "paywalled"
+        ],
+        "blockedBy": [
+          "paywall"
+        ]
+      },
+      "isFetchingAllowed": false,
+      "alternate": {}
+    },
+    {
+      "url": "https://towardsdatascience.com/dont-follow-generic-ml-engineer-roadmaps-do-this-instead-2/",
+      "startedAt": "2025-10-14T12:23:05.990Z",
+      "endedAt": "2025-10-14T12:23:16.507Z",
+      "durationMs": 10517,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://towardsdatascience.com/dont-follow-generic-ml-engineer-roadmaps-do-this-instead-2/",
+        "title": "How to Become a Machine Learning Engineer (Step-by-Step) | Towards Data Science",
+        "featuredImage": "https://towardsdatascience.com/wp-content/uploads/2025/09/ZERO-1.jpg",
+        "favicon": "https://towardsdatascience.com/wp-content/uploads/2025/02/cropped-Favicon-32x32.png",
+        "excerpt": "Your one-stop guide to becoming a machine learning engineer",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://www.ft.com/content/837369d7-0db3-4c8e-855d-486d335d453b",
+      "startedAt": "2025-10-14T12:23:06.009Z",
+      "endedAt": "2025-10-14T12:23:17.133Z",
+      "durationMs": 11124,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.ft.com/content/837369d7-0db3-4c8e-855d-486d335d453b",
+        "title": "South Korea resists US pressure to finalise ‘Japan-style’ trade deal",
+        "featuredImage": "https://images.ft.com/v3/image/raw/https%3A%2F%2Fd1e00ek4ebabms.cloudfront.net%2Fproduction%2F4d32be99-5090-4827-baa6-5e9f3632d97e.jpg?source=next-article&fit=scale-down&quality=highest&width=700&dpr=1",
+        "favicon": "https://images.ft.com/v3/image/raw/ftlogo-v1%3Abrand-ft-logo-square-coloured?source=page-kit&format=svg",
+        "accept": "text/html",
+        "isFetchingAllowed": false,
+        "extractability": {
+          "status": "disallowed",
+          "reasons": [
+            "paywalled"
+          ],
+          "blockedBy": [
+            "paywall"
+          ]
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "disallowed",
+        "reasons": [
+          "paywalled"
+        ],
+        "blockedBy": [
+          "paywall"
+        ]
+      },
+      "isFetchingAllowed": false,
+      "alternate": {}
+    },
+    {
+      "url": "https://x.com/sebastienlorber/status/1967505994843611305",
+      "startedAt": "2025-10-14T12:23:16.615Z",
+      "endedAt": "2025-10-14T12:23:17.918Z",
+      "durationMs": 1303,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://x.com/sebastienlorber/status/1967505994843611305",
+        "title": "https://x.com/sebastienlorber/status/1967505994843611305",
+        "featuredImage": "https://abs-0.twimg.com/emoji/v2/svg/26a0.svg",
+        "favicon": "https://abs.twimg.com/favicons/twitter.3.ico",
+        "accept": "text/html",
+        "isFetchingAllowed": false,
+        "extractability": {
+          "status": "disallowed",
+          "reasons": [
+            "robots_disallow"
+          ],
+          "blockedBy": [
+            "robots"
+          ]
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "disallowed",
+        "reasons": [
+          "robots_disallow"
+        ],
+        "blockedBy": [
+          "robots"
+        ]
+      },
+      "isFetchingAllowed": false,
+      "alternate": {}
+    },
+    {
+      "url": "https://www.businessinsider.com/anthropic-bot-crawlers-feast-on-web-give-little-back-ranking-2025-9",
+      "startedAt": "2025-10-14T12:23:17.245Z",
+      "endedAt": "2025-10-14T12:23:18.907Z",
+      "durationMs": 1662,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.businessinsider.com/anthropic-bot-crawlers-feast-on-web-give-little-back-ranking-2025-9",
+        "title": "Anthropic Bot Crawlers Feast on the Web and Give Little Back: Ranking - Business Insider",
+        "featuredImage": "https://i.insider.com/68bf50a0f9db348adc0b138b?width=1200&format=jpeg",
+        "favicon": "https://www.businessinsider.com/public/assets/BI/US/favicons/apple-touch-icon-192x192.png?v=2025-05",
+        "accept": "text/html",
+        "isFetchingAllowed": false,
+        "extractability": {
+          "status": "disallowed",
+          "reasons": [
+            "paywalled"
+          ],
+          "blockedBy": [
+            "paywall"
+          ]
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "disallowed",
+        "reasons": [
+          "paywalled"
+        ],
+        "blockedBy": [
+          "paywall"
+        ]
+      },
+      "isFetchingAllowed": false,
+      "alternate": {}
+    },
+    {
+      "url": "https://www.xda-developers.com/ersatztv-open-source-self-hosted-media-tv-station/",
+      "startedAt": "2025-10-14T12:23:18.034Z",
+      "endedAt": "2025-10-14T12:23:20.496Z",
+      "durationMs": 2462,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.xda-developers.com/ersatztv-open-source-self-hosted-media-tv-station/",
+        "title": "This free and open-source program turns your self-hosted media into a TV station",
+        "featuredImage": "https://static0.xdaimages.com/wordpress/wp-content/uploads/wm/2025/09/this-free-and-open-source-program-turns-your-self-hosted-media-into-a-tv-station-featured.jpeg?w=1600&h=900&fit=crop",
+        "favicon": "https://static0.xdaimages.com/assets/images/favicon-48x48.8f822f21.png",
+        "excerpt": "Turn your media library into live TV channels with ErsatzTV, a free open-source project for self-hosted streaming.",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://fortune.com/2025/09/12/mike-repole-career-advice-dont-be-an-entrepreneur-glaceau-bodyarmor-coca-cola/",
+      "startedAt": "2025-10-14T12:23:19.017Z",
+      "endedAt": "2025-10-14T12:23:20.915Z",
+      "durationMs": 1898,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://fortune.com/2025/09/12/mike-repole-career-advice-dont-be-an-entrepreneur-glaceau-bodyarmor-coca-cola/",
+        "title": "Billionaire who sold two companies to Coca-Cola says he tries to convince people not to become entrepreneurs: 'Every single day, you can go bankrupt' | Fortune",
+        "featuredImage": "https://fortune.com/img-assets/wp-content/uploads/2025/09/GettyImages-113809547-e1757689293178.jpg?resize=1200,600",
+        "favicon": "https://fortune.com/icons/favicons/favicon.ico",
+        "accept": "text/html",
+        "isFetchingAllowed": false,
+        "extractability": {
+          "status": "disallowed",
+          "reasons": [
+            "paywalled"
+          ],
+          "blockedBy": [
+            "paywall"
+          ]
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "disallowed",
+        "reasons": [
+          "paywalled"
+        ],
+        "blockedBy": [
+          "paywall"
+        ]
+      },
+      "isFetchingAllowed": false,
+      "alternate": {}
+    },
+    {
+      "url": "https://www.cnbc.com/2025/09/15/best-mba-programs-in-the-world-2025.html",
+      "startedAt": "2025-10-14T12:23:16.334Z",
+      "endedAt": "2025-10-14T12:23:22.231Z",
+      "durationMs": 5897,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.cnbc.com/2025/09/15/best-mba-programs-in-the-world-2025.html",
+        "title": "LinkedIn: The 10 best MBA programs in the world in 2025",
+        "featuredImage": "https://image.cnbcfm.com/api/v1/image/107428031-1718212153628-gettyimages-1344976470-cal-100221-022.jpeg?v=1718212208&w=1920&h=1080",
+        "favicon": "https://sc.cnbcfm.com/applications/cnbc.com/staticcontent/img/favicon.ico",
+        "excerpt": "The best business schools in the world offer students great alumni networks, career advancement and leadership training, according to LinkedIn data.",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {
+          "ampUrl": "https://www.cnbc.com/amp/2025/09/15/best-mba-programs-in-the-world-2025.html"
+        }
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {
+        "ampUrl": "https://www.cnbc.com/amp/2025/09/15/best-mba-programs-in-the-world-2025.html"
+      }
+    },
+    {
+      "url": "https://www.analyticsvidhya.com/blog/2025/09/create-videos-using-veo-3-and-nano-banana/",
+      "startedAt": "2025-10-14T12:23:20.605Z",
+      "endedAt": "2025-10-14T12:23:22.792Z",
+      "durationMs": 2187,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.analyticsvidhya.com/blog/2025/09/create-videos-using-veo-3-and-nano-banana/",
+        "title": "How to Create Videos Using Nano Banana + Veo 3? - Analytics Vidhya",
+        "featuredImage": "https://cdn.analyticsvidhya.com/wp-content/uploads/2025/09/Veo-3-and-nano-banana.webp",
+        "favicon": "https://imgcdn.analyticsvidhya.com/favicon/av-fav.ico",
+        "excerpt": "Learn about Veo 3 and Nano Banana, two powerful tools from Google designed to simplify high-quality video and image creation.",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://www.xda-developers.com/use-these-docker-containers-to-manage-business/",
+      "startedAt": "2025-10-14T12:23:22.344Z",
+      "endedAt": "2025-10-14T12:23:24.638Z",
+      "durationMs": 2294,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.xda-developers.com/use-these-docker-containers-to-manage-business/",
+        "title": "I use these Docker containers to manage my entire business",
+        "featuredImage": "https://static0.xdaimages.com/wordpress/wp-content/uploads/2024/12/best-docker-containers-for-productivity.jpg?w=1600&h=900&fit=crop",
+        "favicon": "https://static0.xdaimages.com/assets/images/favicon-48x48.8f822f21.png",
+        "excerpt": "Docker stack that manages my whole business",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://www.cnbc.com/2025/09/15/trump-advocates-that-companies-stop-reporting-earnings-on-a-quarterly-basis-.html",
+      "startedAt": "2025-10-14T12:23:21.023Z",
+      "endedAt": "2025-10-14T12:23:25.895Z",
+      "durationMs": 4872,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.cnbc.com/2025/09/15/trump-advocates-that-companies-stop-reporting-earnings-on-a-quarterly-basis-.html",
+        "title": "Trump advocates end to quarterly earnings reports",
+        "featuredImage": "https://image.cnbcfm.com/api/v1/image/108198711-1757937970908-gettyimages-2235446366-_d1_3562_8glujlzg.jpeg?v=1757985047&w=1920&h=1080",
+        "favicon": "https://sc.cnbcfm.com/applications/cnbc.com/staticcontent/img/favicon.ico",
+        "excerpt": "Trump said the idea is \"subject to SEC approval\" and would \"save money, and allow managers to focus on properly running their companies.\"",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {
+          "ampUrl": "https://www.cnbc.com/amp/2025/09/15/trump-advocates-that-companies-stop-reporting-earnings-on-a-quarterly-basis-.html"
+        }
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {
+        "ampUrl": "https://www.cnbc.com/amp/2025/09/15/trump-advocates-that-companies-stop-reporting-earnings-on-a-quarterly-basis-.html"
+      }
+    },
+    {
+      "url": "https://lifehacker.com/tech/why-the-pixel-9a-is-still-the-best-google-phone-for-most-people",
+      "startedAt": "2025-10-14T12:23:22.897Z",
+      "endedAt": "2025-10-14T12:23:26.172Z",
+      "durationMs": 3275,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://lifehacker.com/tech/why-the-pixel-9a-is-still-the-best-google-phone-for-most-people",
+        "title": "Why the Pixel 9a Is Still the Best Google Phone for Most People | Lifehacker",
+        "featuredImage": "https://lifehacker.com/imagery/articles/01K4ZRK1JGY6303A0EJEDSS51V/hero-image.fill.size_1200x675.jpg",
+        "favicon": "https://lifehacker.com/images/favicon.ico",
+        "excerpt": "Google's Pixel 10 and Pixel 10 Pro come with some fancy AI, but once you dive into the specifics, they still don't improve enough to justify getting anything but the Pixel 9a.",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://ahan.org.pk/latest-gold-rates-in-pakistan-today-19-september-2025-market-update/",
+      "startedAt": "2025-10-14T12:23:26.273Z",
+      "endedAt": "2025-10-14T12:23:28.538Z",
+      "durationMs": 2265,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://ahan.org.pk/latest-gold-rates-in-pakistan-today-19-september-2025-market-update/",
+        "title": "Latest Gold Rates in Pakistan Today – 19 September 2025 Market Update - ahan.org.pk",
+        "featuredImage": "https://ahan.org.pk/wp-content/uploads/2025/09/Latest-Gold-Rates-in-Pakistan-Today-%E2%80%93-19-September-2025-Market-Update-2.webp",
+        "favicon": "https://ahan.org.pk/wp-content/uploads/2025/08/cropped-logo_no_background-192x192.png",
+        "excerpt": "The gold market in Pakistan has once again seen fluctuations, with fresh rates announced for 19 September 2025.",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://www.androidpolice.com/why-pixel-journal-might-be-googles-most-personal-app-yet/",
+      "startedAt": "2025-10-14T12:23:26.006Z",
+      "endedAt": "2025-10-14T12:23:28.879Z",
+      "durationMs": 2873,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.androidpolice.com/why-pixel-journal-might-be-googles-most-personal-app-yet/",
+        "title": "This AI-powered app is redefining personal reflection",
+        "featuredImage": "https://static0.anpoimages.com/wordpress/wp-content/uploads/2025/09/smiling-woman-using-a-smartphone-with-the-pixel-journal-logo-on-the-right-and-screenshots-in-the-background.png?w=1600&h=900&fit=crop",
+        "favicon": "https://static0.anpoimages.com/assets/images/favicon-48x48.52dff51b.png",
+        "excerpt": "The app's simplicity and lack of structure make it more accessible and organic, focusing on the act of journaling",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://www.cnbc.com/2025/09/11/stanford-expert-playing-nice-at-work-wont-help-you-gain-influence.html",
+      "startedAt": "2025-10-14T12:23:24.743Z",
+      "endedAt": "2025-10-14T12:23:30.794Z",
+      "durationMs": 6051,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.cnbc.com/2025/09/11/stanford-expert-playing-nice-at-work-wont-help-you-gain-influence.html",
+        "title": "Stanford expert: Playing nice at work won’t help you gain influence",
+        "featuredImage": "https://image.cnbcfm.com/api/v1/image/108184801-1755013742421-GettyImages-2218698454.jpg?v=1755013851&w=1920&h=1080",
+        "favicon": "https://sc.cnbcfm.com/applications/cnbc.com/staticcontent/img/favicon.ico",
+        "excerpt": "If you want to gain influence at work, prioritize getting your job done over being nice, says Stanford organizational behavior professor Jeffrey Pfeffer.",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {
+          "ampUrl": "https://www.cnbc.com/amp/2025/09/11/stanford-expert-playing-nice-at-work-wont-help-you-gain-influence.html"
+        }
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {
+        "ampUrl": "https://www.cnbc.com/amp/2025/09/11/stanford-expert-playing-nice-at-work-wont-help-you-gain-influence.html"
+      }
+    },
+    {
+      "url": "https://propakistani.pk/2025/09/24/famous-karachi-neighborhood-to-undergo-major-solar-transformation/",
+      "startedAt": "2025-10-14T12:23:28.982Z",
+      "endedAt": "2025-10-14T12:23:31.626Z",
+      "durationMs": 2644,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://propakistani.pk/2025/09/24/famous-karachi-neighborhood-to-undergo-major-solar-transformation/",
+        "title": "Famous Karachi Neighborhood to Undergo Major Solar Transformation",
+        "featuredImage": "https://propakistani.pk/wp-content/uploads/2024/07/solar-panels-.jpg",
+        "favicon": "https://propakistani.pk/wp-content/uploads/2018/01/cropped-icon-1-32x32.png",
+        "excerpt": "Karachi’s Lyari neighborhood is set to undergo a major transformation as part of a new project aimed at making the area fully solar-powered. This",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {
+          "ampUrl": "https://propakistani.pk/2025/09/24/famous-karachi-neighborhood-to-undergo-major-solar-transformation/amp/"
+        }
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {
+        "ampUrl": "https://propakistani.pk/2025/09/24/famous-karachi-neighborhood-to-undergo-major-solar-transformation/amp/"
+      }
+    },
+    {
+      "url": "https://mashable.com/article/what-is-chatgpt-go-openai-subscription",
+      "startedAt": "2025-10-14T12:23:28.664Z",
+      "endedAt": "2025-10-14T12:23:32.849Z",
+      "durationMs": 4185,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://mashable.com/article/what-is-chatgpt-go-openai-subscription",
+        "title": "What is ChatGPT Go? OpenAI brings $5 plan to new markets. | Mashable",
+        "featuredImage": "https://helios-i.mashable.com/imagery/articles/06QnFTlMEjiKAGax7uzVaQi/hero-image.fill.size_1200x675.v1758645207.jpg",
+        "favicon": "https://mashable.com/favicons/favicon-16x16.jpg",
+        "excerpt": "OpenAI has introduced a new low subscription tier for ChatGPT, but it's probably not available in your market. Here's what you need to know about ChatGPT Go.",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://propakistani.pk/2025/09/24/pia-holding-to-transfer-precision-engineering-complex-to-pakistan-air-force-entity/",
+      "startedAt": "2025-10-14T12:23:30.905Z",
+      "endedAt": "2025-10-14T12:23:33.777Z",
+      "durationMs": 2872,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://propakistani.pk/2025/09/24/pia-holding-to-transfer-precision-engineering-complex-to-pakistan-air-force-entity/",
+        "title": "PIA Holding to Transfer Precision Engineering Complex to Pakistan Air Force Entity",
+        "featuredImage": "https://propakistani.pk/wp-content/uploads/2025/01/PIA-logo.jpg",
+        "favicon": "https://propakistani.pk/wp-content/uploads/2018/01/cropped-icon-1-32x32.png",
+        "excerpt": "PIA Holding Company Limited (PIAHCL) has announced the approval of a Scheme of Arrangement for the transfer of its Precision Engineering Complex (PECL) to",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {
+          "ampUrl": "https://propakistani.pk/2025/09/24/pia-holding-to-transfer-precision-engineering-complex-to-pakistan-air-force-entity/amp/"
+        }
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {
+        "ampUrl": "https://propakistani.pk/2025/09/24/pia-holding-to-transfer-precision-engineering-complex-to-pakistan-air-force-entity/amp/"
+      }
+    },
+    {
+      "url": "https://simonwillison.net/2025/Sep/23/gpt-5-codex/",
+      "startedAt": "2025-10-14T12:23:32.954Z",
+      "endedAt": "2025-10-14T12:23:35.421Z",
+      "durationMs": 2467,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://simonwillison.net/2025/Sep/23/gpt-5-codex/",
+        "title": "GPT-5-Codex",
+        "featuredImage": "https://static.simonwillison.net/static/2025/gpt-5-codex-api-pelican.png",
+        "favicon": "https://simonwillison.net/favicon.ico",
+        "excerpt": "OpenAI half-released this model earlier this month, adding it to their Codex CLI tool but not their API. Today they've fixed that - the new model can now be accessed …",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://www.zdnet.com/article/10-chatgpt-codex-secrets-i-only-learned-after-60-hours-of-pair-programming-with-it/",
+      "startedAt": "2025-10-14T12:23:33.886Z",
+      "endedAt": "2025-10-14T12:23:37.596Z",
+      "durationMs": 3710,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.zdnet.com/article/10-chatgpt-codex-secrets-i-only-learned-after-60-hours-of-pair-programming-with-it/",
+        "title": "10 ChatGPT Codex secrets I only learned after 60 hours of pair programming with it | ZDNET",
+        "featuredImage": "https://www.zdnet.com/a/img/resize/b1c6333bc67f7930307664724f729a7fc6cdd105/2025/09/22/29349dc7-b8c7-472b-b776-c714124afbf3/codex.jpg?auto=webp&fit=crop&height=675&width=1200",
+        "favicon": "https://www.zdnet.com/a/neutron/images/logos/logo.png",
+        "excerpt": "Pair programming with ChatGPT Codex for a week exposed hard-won lessons every developer should know before trying it.",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+      "startedAt": "2025-10-14T12:23:37.698Z",
+      "endedAt": "2025-10-14T12:23:41.047Z",
+      "durationMs": 3349,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+        "title": "GitHub - ChromeDevTools/chrome-devtools-mcp: Chrome DevTools for coding agents",
+        "featuredImage": "https://opengraph.githubassets.com/9e9739323b0f24d715be754378433f7b3b4fcdf1c49e1a774f443595c9ade6ce/ChromeDevTools/chrome-devtools-mcp",
+        "favicon": "https://github.githubassets.com/favicons/favicon.svg",
+        "excerpt": "Chrome DevTools for coding agents. Contribute to ChromeDevTools/chrome-devtools-mcp development by creating an account on GitHub.",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://www.kdnuggets.com/building-machine-learning-application-with-django",
+      "startedAt": "2025-10-14T12:23:41.161Z",
+      "endedAt": "2025-10-14T12:23:43.621Z",
+      "durationMs": 2460,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://www.kdnuggets.com/building-machine-learning-application-with-django",
+        "title": "Building Machine Learning Application with Django - KDnuggets",
+        "featuredImage": "https://www.kdnuggets.com/wp-content/uploads/awan_building_machine_learning_application_django_1a.png",
+        "favicon": "https://www.kdnuggets.com/wp-content/themes/kdn17/images/favicon.ico",
+        "excerpt": "Build and serve your own end-to-end machine learning app with Django, from training the model to creating web forms and APIs, all in one tutorial.",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md",
+      "startedAt": "2025-10-14T12:23:43.724Z",
+      "endedAt": "2025-10-14T12:23:46.575Z",
+      "durationMs": 2851,
+      "httpStatus": 200,
+      "success": true,
+      "error": null,
+      "data": {
+        "final_url": "https://github.com/PicoTrex/Awesome-Nano-Banana-images/blob/main/README_en.md",
+        "title": "Awesome-Nano-Banana-images/README_en.md at main · PicoTrex/Awesome-Nano-Banana-images · GitHub",
+        "featuredImage": "https://opengraph.githubassets.com/d1e58e20bae894dda1b186de9aff42d027fab56bdfb9da8abf972b2cce96db17/PicoTrex/Awesome-Nano-Banana-images",
+        "favicon": "https://github.githubassets.com/favicons/favicon.svg",
+        "excerpt": "A curated collection of fun and creative examples generated with Nano Banana🍌, Gemini-2.5-flash-image based model. We also release Nano-consistent-150K openly to support the community's development of image generation and unified models(click to website to see our blog) - Awesome-Nano-Banana-images/README_en.md at main · PicoTrex/Awesome-Nano-Banana-images",
+        "accept": "text/html",
+        "isFetchingAllowed": true,
+        "extractability": {
+          "status": "allowed",
+          "reasons": [],
+          "blockedBy": []
+        },
+        "alternate": {}
+      },
+      "extractability": {
+        "status": "allowed",
+        "reasons": [],
+        "blockedBy": []
+      },
+      "isFetchingAllowed": true,
+      "alternate": {}
+    },
+    {
+      "url": "https://www.freecodecamp.org/news/how-to-build-advanced-ai-agents/",
+      "startedAt": "2025-10-14T12:23:31.735Z",
+      "endedAt": "2025-10-14T12:23:46.754Z",
+      "durationMs": 15019,
+      "httpStatus": null,
+      "success": false,
+      "error": "Timeout after 15000ms",
+      "data": null,
+      "extractability": null,
+      "isFetchingAllowed": null,
+      "alternate": null
+    },
+    {
+      "url": "https://www.freecodecamp.org/news/build-an-enterprise-grade-ai-project/",
+      "startedAt": "2025-10-14T12:23:35.541Z",
+      "endedAt": "2025-10-14T12:23:50.556Z",
+      "durationMs": 15015,
+      "httpStatus": null,
+      "success": false,
+      "error": "Timeout after 15000ms",
+      "data": null,
+      "extractability": null,
+      "isFetchingAllowed": null,
+      "alternate": null
+    }
+  ]
+}

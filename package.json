@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:parse-urls": "node scripts/run-parse-urls.mjs"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

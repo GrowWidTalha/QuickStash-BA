@@ -4,11 +4,13 @@ import http from "http";
 import https from "https";
 import { URL } from "url";
 import robotsParser from "robots-parser"; // npm i robots-parser
+import database from "@/lib/config";
 
 /**
  * Simple in-memory robots cache (ephemeral in serverless).
  */
 const ROBOTS_CACHE_TTL_MS = 60 * 1000; // tune as needed
+const DOMAIN_POLICY_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const robotsCache = new Map<string, { text: string; fetchedAt: number }>();
 
 const DEFAULT_PLACEHOLDER_IMAGE = "https://example.com/image-not-available.png";
@@ -77,6 +79,50 @@ function extractFromHtml(html: string, baseUrl: string) {
   console.log(`~~ STEP ~~ Extracted featured image: ${featured ? featured : "null"}`);
 
   return { title, excerpt, favicon, featured };
+}
+
+function analyzePoliciesFromHtml(html: string) {
+  const $ = cheerio.load(html);
+  const blockedBy: string[] = [];
+  const reasons: string[] = [];
+
+  // robots meta tag
+  const robotsMeta = $('meta[name="robots"]').attr('content') || '';
+  const robotsContent = robotsMeta.toLowerCase();
+  if (robotsContent.includes('noai')) { reasons.push('meta_noai'); blockedBy.push('meta'); }
+  if (robotsContent.includes('nosnippet')) { reasons.push('meta_nosnippet'); blockedBy.push('meta'); }
+  if (robotsContent.includes('noarchive')) { reasons.push('meta_noarchive'); blockedBy.push('meta'); }
+  if (robotsContent.includes('noindex')) { reasons.push('meta_noindex'); blockedBy.push('meta'); }
+
+  // structured data paywall hints
+  const ldJsonNodes = $('script[type="application/ld+json"]').toArray();
+  try {
+    for (const node of ldJsonNodes) {
+      const txt = $(node).contents().text();
+      if (!txt) continue;
+      const data = JSON.parse(txt);
+      const items = Array.isArray(data) ? data : [data];
+      for (const item of items) {
+        if (item && typeof item === 'object' && 'isAccessibleForFree' in item) {
+          if (item.isAccessibleForFree === false || String(item.isAccessibleForFree).toLowerCase() === 'false') {
+            reasons.push('paywalled');
+            blockedBy.push('paywall');
+          }
+        }
+      }
+    }
+  } catch {}
+
+  // other paywall hints
+  const paywallMeta = $('meta[name="meteredPaywall"]').attr('content') || '';
+  if (paywallMeta.toLowerCase() === 'true') { reasons.push('paywalled'); blockedBy.push('paywall'); }
+  const contentTier = $('meta[property="article:content_tier"]').attr('content') || '';
+  if (contentTier.toLowerCase() === 'subscription') { reasons.push('paywalled'); blockedBy.push('paywall'); }
+
+  // AMP alternate
+  const ampUrl = $('link[rel="amphtml"]').attr('href') || undefined;
+
+  return { reasons, blockedBy, ampUrl } as { reasons: string[]; blockedBy: string[]; ampUrl?: string };
 }
 
 /* ---------- HTTP/1.1 fallback helper (http1GetFollow) ---------- */
@@ -283,8 +329,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Invalid final URL after redirects" }, { status: 400 });
     }
 
-    // Fetch robots.txt (cached)
-    const robotsText = await fetchRobotsTxt(origin);
+    // Domain overrides (hotfix lists)
+    const overrides = {
+      allowDomains: new Set<string>([]),
+      denyDomains: new Set<string>([]),
+      allowUrls: new Set<string>([]),
+      denyUrls: new Set<string>([]),
+    };
+
+    // Domain policy from DB (TTL-based)
+    const hostname = new URL(finalUrl).hostname;
+    let domainPolicy: any = null;
+    try {
+      const rows: any = await database.$queryRawUnsafe(`SELECT domain, robots_txt, ttl_expires_at FROM domain_policies WHERE domain = $1 LIMIT 1`, hostname);
+      domainPolicy = Array.isArray(rows) && rows.length ? rows[0] : null;
+    } catch {}
+
+    const nowTs = Date.now();
+    const dpFresh = domainPolicy && domainPolicy.ttl_expires_at && new Date(domainPolicy.ttl_expires_at).getTime() > nowTs;
+
+    // Fetch robots.txt (cached, not DB)
+    const robotsText = dpFresh && domainPolicy.robots_txt ? domainPolicy.robots_txt : await fetchRobotsTxt(origin);
     const robotsTxtUrl = new URL("/robots.txt", origin).toString();
 
     // Use library to decide allow/disallow
@@ -300,7 +365,106 @@ export async function POST(req: NextRequest) {
     const acceptHeaderValue = "text/html";
     let html = resolvedHtml;
 
-    if (allowed) {
+    // Lightweight header probe to inspect X-Robots-Tag and status without downloading full body again
+    let statusCodeProbe: number | null = null;
+    let xRobotsTag: string | null = null;
+    try {
+      const headResp = await fetch(finalUrl, {
+        method: "GET", // HEAD is often blocked; GET with identity encoding and small read is safer
+        redirect: "follow",
+        headers: {
+          "User-Agent": FETCHER_USER_AGENT,
+          Accept: acceptHeaderValue,
+          Connection: "close",
+          "Accept-Encoding": "identity",
+          Range: "bytes=0-102400", // hint to keep it light; many servers ignore but fine
+        },
+      });
+      statusCodeProbe = headResp.status;
+      xRobotsTag = headResp.headers.get('x-robots-tag');
+      // do not overwrite html if we already have it; else take tiny body if ok
+      if (!html) {
+        try {
+          html = await headResp.text();
+        } catch {}
+      }
+    } catch (e) {
+      console.warn('~~ STEP ~~ Header probe failed', e);
+    }
+
+    // Compose extractability from multiple signals
+    const reasons: string[] = [];
+    const blockedBy: string[] = [];
+    const alternate: { ampUrl?: string } = {};
+
+    // Overrides
+    if (overrides.allowUrls.has(finalUrl) || overrides.allowDomains.has(hostname)) {
+      reasons.length = 0;
+      blockedBy.length = 0;
+      allowed = true;
+    }
+    if (overrides.denyUrls.has(finalUrl) || overrides.denyDomains.has(hostname)) {
+      allowed = false;
+      reasons.push('override_deny');
+      blockedBy.push('override');
+    }
+
+    if (xRobotsTag) {
+      const lower = xRobotsTag.toLowerCase();
+      if (lower.includes('noai')) { reasons.push('xrobots_noai'); blockedBy.push('xrobots'); }
+      if (lower.includes('nosnippet')) { reasons.push('xrobots_nosnippet'); blockedBy.push('xrobots'); }
+      if (lower.includes('noarchive')) { reasons.push('xrobots_noarchive'); blockedBy.push('xrobots'); }
+      if (lower.includes('noindex')) { reasons.push('xrobots_noindex'); blockedBy.push('xrobots'); }
+    }
+
+    if (typeof statusCodeProbe === 'number') {
+      if ([401,403,429,451].includes(statusCodeProbe)) { reasons.push('blocked_status'); blockedBy.push(`status_${statusCodeProbe}`); }
+      if (statusCodeProbe >= 500) { reasons.push('blocked_status'); blockedBy.push('status_5xx'); }
+    }
+
+    // Analyze HTML-level signals (meta robots, amp, paywall)
+    if (html) {
+      const { reasons: htmlReasons, blockedBy: htmlBlocked, ampUrl } = analyzePoliciesFromHtml(html);
+      reasons.push(...htmlReasons);
+      blockedBy.push(...htmlBlocked);
+      if (ampUrl) {
+        try { alternate.ampUrl = new URL(ampUrl, finalUrl).toString(); } catch { alternate.ampUrl = undefined; }
+      }
+    }
+
+    // Robots disallow is a hard signal if path is disallowed
+    if (!allowed) {
+      reasons.push('robots_disallow');
+      blockedBy.push('robots');
+    }
+
+    // decide extractability status
+    const extractability = (() => {
+      if (!allowed || blockedBy.includes('xrobots') || blockedBy.includes('meta') || blockedBy.some(s => s.startsWith('status_')) || blockedBy.includes('paywall')) {
+        return { status: 'disallowed' as const, reasons, blockedBy };
+      }
+      return { status: 'allowed' as const, reasons, blockedBy };
+    })();
+
+    // Persist/update domain policy cache in DB
+    try {
+      const hasNoAi = reasons.includes('xrobots_noai') || reasons.includes('meta_noai');
+      const ttl = new Date(Date.now() + DOMAIN_POLICY_TTL_MS);
+      await database.$executeRawUnsafe(
+        `INSERT INTO domain_policies (domain, robots_txt, robots_disallow_paths, has_noai, checked_at, ttl_expires_at)
+         VALUES ($1, $2, $3, $4, now(), $5)
+         ON CONFLICT (domain) DO UPDATE SET robots_txt=EXCLUDED.robots_txt, has_noai=COALESCE(EXCLUDED.has_noai, domain_policies.has_noai), checked_at=now(), ttl_expires_at=EXCLUDED.ttl_expires_at`,
+        hostname,
+        robotsText || '',
+        null,
+        hasNoAi ? true : null,
+        ttl
+      );
+    } catch (e) {
+      console.warn('~~ STEP ~~ Failed to upsert domain policy', e);
+    }
+
+    if (allowed && extractability.status === 'allowed') {
       // Allowed: fetch HTML if needed, extract metadata and return
       console.log("~~ STEP ~~ robots allowed access → fetching HTML if not already available");
       if (!html) {
@@ -336,6 +500,8 @@ export async function POST(req: NextRequest) {
           excerpt: excerpt || null,
           accept: acceptHeaderValue,
           isFetchingAllowed: true,
+          extractability,
+          alternate,
         },
       });
     } else {
@@ -393,6 +559,8 @@ export async function POST(req: NextRequest) {
               featuredImage: DEFAULT_PLACEHOLDER_IMAGE,
               accept: acceptHeaderValue,
               isFetchingAllowed: false,
+              extractability,
+              alternate,
             },
           });
         }
@@ -407,6 +575,8 @@ export async function POST(req: NextRequest) {
             favicon: favicon || null,
             accept: acceptHeaderValue,
             isFetchingAllowed: false,
+            extractability,
+            alternate,
           },
         });
       } catch (err) {
@@ -419,6 +589,8 @@ export async function POST(req: NextRequest) {
             featuredImage: DEFAULT_PLACEHOLDER_IMAGE,
             accept: acceptHeaderValue,
             isFetchingAllowed: false,
+            extractability,
+            alternate,
           },
         });
       }

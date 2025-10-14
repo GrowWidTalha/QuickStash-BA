@@ -85,6 +85,18 @@ const saves = {
         featured_image_url = data.featuredImage
         url = data.final_url
         isFetchingAllowed = data.isFetchingAllowed
+
+        // Map extractability for DB persistence
+        const ex = data.extractability || null as any;
+        var _isExtractable: boolean | null = null;
+        if (ex?.status === 'allowed') _isExtractable = true;
+        else if (ex?.status === 'disallowed') _isExtractable = false;
+        const _extractabilityReason: string | undefined = ex?.reasons?.length ? String(ex.reasons.join(',')) : (ex?.status || undefined);
+        const _blockedBy: string | undefined = ex?.blockedBy?.length ? String(ex.blockedBy.join(',')) : undefined;
+        var _extractabilityCheckedAt: Date | undefined = ex ? new Date() : undefined;
+        ;
+        // Stash on a local object to include in create() below
+        (global as any).__exFlags = { _isExtractable, _extractabilityReason, _blockedBy, _extractabilityCheckedAt };
       }
       // Get current user from token
       console.log("~ 🚀: addSave - getting user from token", accessToken);
@@ -139,6 +151,11 @@ const saves = {
           isArchived: false,
           featured_image_url: featured_image_url,
           isFetchingAllowed: isFetchingAllowed,
+          // Extractability flags (if available from parse-url)
+          isExtractable: (global as any).__exFlags?._isExtractable ?? undefined,
+          extractabilityReason: (global as any).__exFlags?._extractabilityReason ?? undefined,
+          blockedBy: (global as any).__exFlags?._blockedBy ?? undefined,
+          extractabilityCheckedAt: (global as any).__exFlags?._extractabilityCheckedAt ?? undefined,
         },
       });
       console.log("~ 🚀: addSave - save created", save.id);

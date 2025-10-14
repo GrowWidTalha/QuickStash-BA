@@ -46,8 +46,40 @@ model Save {
   featured_image_url String?
   isFetchingAllowed Boolean  @default(false)
 
+  // Extractability flags (nullable to represent unknown)
+  isExtractable              Boolean?
+  extractabilityReason       String?
+  blockedBy                  String?  // comma-separated list: robots,meta,xrobots,status_403,status_451,rate_limit,other
+  extractionMethod           String?  // e.g., webview_readability, amp_readability, fallback_preview
+  extractabilityCheckedAt    DateTime?
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("saves")
+}
+
+// Optional: cache of domain-level policies/signals
+model DomainPolicy {
+  domain                String    @id
+  robots_txt            String?
+  robots_disallow_paths Json?
+  has_noai              Boolean?  // derived from X-Robots-Tag or meta robots on representative pages
+  checked_at            DateTime  @default(now())
+  ttl_expires_at        DateTime?
+
+  @@map("domain_policies")
+}
+
+model ExtractionTelemetry {
+  id              String   @id @default(cuid())
+  url             String
+  attempted       Boolean
+  success         Boolean
+  method          String?
+  failure_reason  String?
+  status_from_api String?   // e.g., allowed/disallowed/unknown observed at time
+  createdAt       DateTime @default(now())
+
+  @@map("extraction_telemetry")
 }

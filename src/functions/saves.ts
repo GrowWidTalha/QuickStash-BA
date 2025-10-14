@@ -171,6 +171,11 @@ const saves = {
           createdAt: save.createdAt,
           isFetchingAllowed: save.isFetchingAllowed,
           featured_image_url: save.featured_image_url,
+          // Extractability
+          isExtractable: (save as any).isExtractable ?? null,
+          extractabilityReason: (save as any).extractabilityReason ?? null,
+          blockedBy: (save as any).blockedBy ?? null,
+          extractabilityCheckedAt: (save as any).extractabilityCheckedAt ?? null,
         },
         error: null,
       };
@@ -249,6 +254,11 @@ const saves = {
           updatedAt: true,
           isRead: true,
           isFetchingAllowed: true,
+          // Extractability
+          isExtractable: true,
+          extractabilityReason: true,
+          blockedBy: true,
+          extractabilityCheckedAt: true,
         },
       });
       // Get total count
@@ -334,6 +344,11 @@ const saves = {
           updatedAt: true,
           isRead: true,
           isFetchingAllowed: true,
+          // Extractability
+          isExtractable: true,
+          extractabilityReason: true,
+          blockedBy: true,
+          extractabilityCheckedAt: true,
         },
       });
       if (!save) {
@@ -597,6 +612,11 @@ const saves = {
           isRead: true,
           createdAt: true,
           updatedAt: true,
+          // Extractability
+          isExtractable: true,
+          extractabilityReason: true,
+          blockedBy: true,
+          extractabilityCheckedAt: true,
         },
       });
 

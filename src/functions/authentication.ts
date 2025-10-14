@@ -16,6 +16,10 @@ export interface GetCurrentUserParams {
     userId: string;
 }
 
+export interface GetUserByEmailParams {
+    email: string;
+}
+
 export interface ResetPasswordParams {
     email: string;
 }
@@ -215,6 +219,46 @@ const authentication = {
                 };
             } catch (error: any) {
                 console.log("~ 🚀: GetCurrentUser - error", error);
+                return {
+                    success: false,
+                    data: null,
+                    error: error.message || "Unknown error",
+                };
+            }
+        },
+        getUserByEmail: async (params: GetUserByEmailParams): Promise<APIResponse> => {
+            try {
+                console.log("~ 🚀: GetUserByEmail - validating params", params);
+                const schema = z.object({
+                    email: z.string().email()
+                });
+                const validatedParams = schema.safeParse(params);
+                if (!validatedParams.success)
+                    return {
+                        success: false,
+                        data: null,
+                        error: validatedParams.error.issues[0].message,
+                    };
+                const { email } = params;
+                console.log("~ 🚀: GetUserByEmail - finding user in DB by email", email);
+                const dbUser = await database.user.findUnique({
+                    where: { email: email },
+                });
+                if (!dbUser) {
+                    console.log("~ 🚀: GetUserByEmail - user not found in DB");
+                    return {
+                        success: false,
+                        data: null,
+                        error: "User not found in database",
+                    };
+                }
+                return {
+                    success: true,
+                    data: dbUser,
+                    error: null,
+                };
+            } catch (error: any) {
+                console.log("~ 🚀: GetUserByEmail - error", error);
                 return {
                     success: false,
                     data: null,

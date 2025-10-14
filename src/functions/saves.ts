@@ -1,11 +1,11 @@
 import { z } from "zod";
-import database, { supabase } from "@/lib/config";
+import database from "@/lib/config";
 import { APIResponse } from "./types";
 import utils from "@/lib/utils";
 
 export interface AddSaveParams {
   url: string;
-  accessToken: string;
+  userId: string;
   title?: string; // Made optional
   excerpt?: string; // Made optional
   favicon_url?: string; // New field
@@ -14,7 +14,7 @@ export interface AddSaveParams {
 }
 
 export interface GetAllSavesParams {
-  accessToken: string;
+  userId: string;
   archived?: boolean;
   page?: number;
   limit?: number;
@@ -22,22 +22,22 @@ export interface GetAllSavesParams {
 
 export interface GetSaveByIdParams {
   id: string;
-  accessToken: string;
+  userId: string;
 }
 
 export interface DeleteSaveParams {
   id: string;
-  accessToken: string;
+  userId: string;
 }
 
 export interface ToggleArchiveParams {
   id: string;
-  accessToken: string;
+  userId: string;
 }
 
 export interface UpdateSaveParams {
   id: string;
-  accessToken: string;
+  userId: string;
   title?: string;
   excerpt?: string;
   favicon_url?: string;
@@ -53,7 +53,7 @@ const saves = {
       console.log("~ 🚀: addSave - validating params", params);
       const schema = z.object({
         url: z.string().url(),
-        accessToken: z.string().min(1),
+        userId: z.string().min(1),
         title: z.string().optional(),
         excerpt: z.string().optional(),
         featured_image_url: z.string().optional(),
@@ -67,7 +67,7 @@ const saves = {
           data: null,
           error: validatedParams.error.issues[0].message,
         };
-      let { url, accessToken, title, excerpt, favicon_url, featured_image_url, isFetchingAllowed } = params;
+      let { url, userId, title, excerpt, favicon_url, featured_image_url, isFetchingAllowed } = params;
       if(!title && !excerpt && !favicon_url && !featured_image_url && !isFetchingAllowed){
         console.log("~ 🚀: addSave - fetching metadata on the backend")
         const parseRes = await fetch(process.env.NEXT_PUBLIC_SERVER_URL + '/api/parse-url', {
@@ -98,21 +98,10 @@ const saves = {
         // Stash on a local object to include in create() below
         (global as any).__exFlags = { _isExtractable, _extractabilityReason, _blockedBy, _extractabilityCheckedAt };
       }
-      // Get current user from token
-      console.log("~ 🚀: addSave - getting user from token", accessToken);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-      if (authError || !user) {
-        console.log("~ 🚀: addSave - invalid token or user not found", authError);
-        return {
-          success: false,
-          data: null,
-          error: "Invalid token",
-        };
-      }
-      // Get user from database
-      console.log("~ 🚀: addSave - finding user in DB", user.id);
+      // Get user from database directly using provided userId
+      console.log("~ 🚀: addSave - finding user in DB", userId);
       const dbUser = await database.user.findUnique({
-        where: { supabaseUserId: user.id },
+        where: { id: userId },
       });
       if (!dbUser) {
         console.log("~ 🚀: addSave - user not found in DB");
@@ -192,7 +181,7 @@ const saves = {
     try {
       console.log("~ 🚀: getAllSaves - validating params", params);
       const schema = z.object({
-        accessToken: z.string().min(1),
+        userId: z.string().min(1),
         archived: z.boolean().optional(),
         page: z.number().optional(),
         limit: z.number().optional(),
@@ -204,22 +193,11 @@ const saves = {
           data: null,
           error: validatedParams.error.issues[0].message,
         };
-      const { accessToken, archived, page = 1, limit = 20 } = params;
-      // Get current user from token
-      console.log("~ 🚀: getAllSaves - getting user from token", accessToken);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-      if (authError || !user) {
-        console.log("~ 🚀: getAllSaves - invalid token or user not found", authError);
-        return {
-          success: false,
-          data: null,
-          error: "Invalid token",
-        };
-      }
+      const { userId, archived, page = 1, limit = 20 } = params;
       // Get user from database
-      console.log("~ 🚀: getAllSaves - finding user in DB", user.id);
+      console.log("~ 🚀: getAllSaves - finding user in DB", userId);
       const dbUser = await database.user.findUnique({
-        where: { supabaseUserId: user.id },
+        where: { id: userId },
       });
       if (!dbUser) {
         console.log("~ 🚀: getAllSaves - user not found in DB");
@@ -291,7 +269,7 @@ const saves = {
       console.log("~ 🚀: getSaveById - validating params", params);
       const schema = z.object({
         id: z.string().min(1),
-        accessToken: z.string().min(1),   
+        userId: z.string().min(1),   
       });
       const validatedParams = schema.safeParse(params);
       if (!validatedParams.success)
@@ -300,22 +278,11 @@ const saves = {
           data: null,
           error: validatedParams.error.issues[0].message,
         };
-      const { id, accessToken } = params;
-      // Get current user from token
-      console.log("~ 🚀: getSaveById - getting user from token", accessToken);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-      if (authError || !user) {
-        console.log("~ 🚀: getSaveById - invalid token or user not found", authError);
-        return {
-          success: false,
-          data: null,
-          error: "Invalid token",
-        };
-      }
+      const { id, userId } = params;
       // Get user from database
-      console.log("~ 🚀: getSaveById - finding user in DB", user.id);
+      console.log("~ 🚀: getSaveById - finding user in DB", userId);
       const dbUser = await database.user.findUnique({
-        where: { supabaseUserId: user.id },
+        where: { id: userId },
       });
       if (!dbUser) {
         console.log("~ 🚀: getSaveById - user not found in DB");
@@ -378,7 +345,7 @@ const saves = {
       console.log("~ 🚀: deleteSave - validating params", params);
       const schema = z.object({
         id: z.string().min(1),
-        accessToken: z.string().min(1),
+        userId: z.string().min(1),
       });
       const validatedParams = schema.safeParse(params);
       if (!validatedParams.success)
@@ -387,22 +354,11 @@ const saves = {
           data: null,
           error: validatedParams.error.issues[0].message,
         };
-      const { id, accessToken } = params;
-      // Get current user from token
-      console.log("~ 🚀: deleteSave - getting user from token", accessToken);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-      if (authError || !user) {
-        console.log("~ 🚀: deleteSave - invalid token or user not found", authError);
-        return {
-          success: false,
-          data: null,
-          error: "Invalid token",
-        };
-      }
+      const { id, userId } = params;
       // Get user from database
-      console.log("~ 🚀: deleteSave - finding user in DB", user.id);
+      console.log("~ 🚀: deleteSave - finding user in DB", userId);
       const dbUser = await database.user.findUnique({
-        where: { supabaseUserId: user.id },
+        where: { id: userId },
       });
       if (!dbUser) {
         console.log("~ 🚀: deleteSave - user not found in DB");
@@ -447,7 +403,7 @@ const saves = {
       console.log("~ 🚀: toggleArchive - validating params", params);
       const schema = z.object({
         id: z.string().min(1),
-        accessToken: z.string().min(1),
+        userId: z.string().min(1),
       });
       const validatedParams = schema.safeParse(params);
       if (!validatedParams.success)
@@ -456,22 +412,11 @@ const saves = {
           data: null,
           error: validatedParams.error.issues[0].message,
         };
-      const { id, accessToken } = params;
-      // Get current user from token
-      console.log("~ 🚀: toggleArchive - getting user from token", accessToken);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-      if (authError || !user) {
-        console.log("~ 🚀: toggleArchive - invalid token or user not found", authError);
-        return {
-          success: false,
-          data: null,
-          error: "Invalid token",
-        };
-      }
+      const { id, userId } = params;
       // Get user from database
-      console.log("~ 🚀: toggleArchive - finding user in DB", user.id);
+      console.log("~ 🚀: toggleArchive - finding user in DB", userId);
       const dbUser = await database.user.findUnique({
-        where: { supabaseUserId: user.id },
+        where: { id: userId },
       });
       if (!dbUser) {
         console.log("~ 🚀: toggleArchive - user not found in DB");
@@ -527,7 +472,7 @@ const saves = {
       console.log("~ 🚀: updateSave - validating params", params);
       const schema = z.object({
         id: z.string().min(1),
-        accessToken: z.string().min(1),
+        userId: z.string().min(1),
         title: z.string().optional(),
         excerpt: z.string().optional(),
         favicon_url: z.string().optional(),
@@ -544,24 +489,12 @@ const saves = {
         };
       }
 
-      const { id, accessToken, title, excerpt, favicon_url, featured_image_url, isRead, isArchived } = params;
-
-      // Get current user from token
-      console.log("~ 🚀: updateSave - getting user from token", accessToken);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-      if (authError || !user) {
-        console.log("~ 🚀: updateSave - invalid token or user not found", authError);
-        return {
-          success: false,
-          data: null,
-          error: "Invalid token",
-        };
-      }
+      const { id, userId, title, excerpt, favicon_url, featured_image_url, isRead, isArchived } = params;
 
       // Get user from database
-      console.log("~ 🚀: updateSave - finding user in DB", user.id);
+      console.log("~ 🚀: updateSave - finding user in DB", userId);
       const dbUser = await database.user.findUnique({
-        where: { supabaseUserId: user.id },
+        where: { id: userId },
       });
       if (!dbUser) {
         console.log("~ 🚀: updateSave - user not found in DB");

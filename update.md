@@ -26,82 +26,32 @@ This update improves extractability detection and exposes clearer signals for th
 - New Telemetry API (`src/app/api/extraction-telemetry/route.ts`):
   - `POST` endpoint to record RN client extraction outcomes using raw SQL insert
 
-### Database migration
-
-If you use Prisma Migrate:
-
-```bash
-npx prisma migrate dev --name extractability_and_domain_policy
-npx prisma generate
-```
-
-If you prefer SQL, create the new columns/tables (adjust types for your environment):
-
-```sql
--- Save table columns (nullable flags)
-ALTER TABLE saves
-  ADD COLUMN IF NOT EXISTS "isExtractable" BOOLEAN NULL,
-  ADD COLUMN IF NOT EXISTS "extractabilityReason" TEXT NULL,
-  ADD COLUMN IF NOT EXISTS "blockedBy" TEXT NULL,
-  ADD COLUMN IF NOT EXISTS "extractionMethod" TEXT NULL,
-  ADD COLUMN IF NOT EXISTS "extractabilityCheckedAt" TIMESTAMPTZ NULL;
-
--- Domain policy cache
-CREATE TABLE IF NOT EXISTS domain_policies (
-  domain TEXT PRIMARY KEY,
-  robots_txt TEXT NULL,
-  robots_disallow_paths JSONB NULL,
-  has_noai BOOLEAN NULL,
-  checked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  ttl_expires_at TIMESTAMPTZ NULL
-);
-
--- Telemetry table
-CREATE EXTENSION IF NOT EXISTS pgcrypto; -- for gen_random_uuid()
-CREATE TABLE IF NOT EXISTS extraction_telemetry (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  url TEXT NOT NULL,
-  attempted BOOLEAN NOT NULL,
-  success BOOLEAN NOT NULL,
-  method TEXT NULL,
-  failure_reason TEXT NULL,
-  status_from_api TEXT NULL,
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-```
 
 ### New/updated API contracts
 
-Parse URL request:
-
+New response from getSavesById function 
 ```json
-{ "url": "https://example.com/article" }
-```
-
-Parse URL response (new fields highlighted):
-
-```json
-{
-  "success": true,
-  "data": {
-    "final_url": "https://example.com/article",
-    "title": "...",
-    "featuredImage": "https://...",
-    "favicon": "https://.../favicon.ico",
-    "excerpt": "...",
-    "accept": "text/html",
-    "isFetchingAllowed": true,
-    "extractability": {
-      "status": "allowed",
-      "reasons": [],
-      "blockedBy": []
+"data": {
+        "blockedBy": null,
+        "createdAt": "2025-10-14T13:30:09.782Z",
+        "excerpt": "Discover how to create stunning and engaging applications using Python.",
+        "extractabilityCheckedAt": "2025-10-14T13:30:08.805Z",
+        "extractabilityReason": "allowed",
+        "favicon_url": "https://www.kdnuggets.com/wp-content/themes/kdn17/images/favicon.ico",
+        "featured_image_url": "https://www.kdnuggets.com/wp-content/uploads/Building-Pure-Python-Web-Apps-with-Reflex_1.jpeg",
+        "id": "cmgqlncvq0001l40490elylc8",
+        "isArchived": false,
+        "isExtractable": true,
+        "isFetchingAllowed": true,
+        "isRead": false,
+        "title": "Building Pure Python Web Apps with Reflex - KDnuggets",
+        "updatedAt": "2025-10-14T13:30:09.782Z",
+        "url": "https://www.kdnuggets.com/building-pure-python-web-apps-with-reflex"
     },
-    "alternate": {
-      "ampUrl": "https://amp.example.com/article"
-    }
-  }
+    "error": null,
+    "success": true
 }
-``;
+```
 
 Extraction Telemetry request:
 
@@ -166,21 +116,3 @@ await api.post('/api/extraction-telemetry', {
   status_from_api: extractability.status,
 });
 ```
-
-### Override lists (backend)
-
-The parse‑url route contains placeholder allow/deny sets for emergency hotfixes. Tie these to env/config as needed.
-
-### Rollout checklist
-
-1) Run DB migrations and `npx prisma generate`.
-2) Deploy backend.
-3) Update RN client to branch on `extractability.status` and add AMP retry.
-4) Start sending telemetry.
-5) Monitor telemetry and adjust override lists if needed.
-
-### Notes
-
-- All extraction remains client‑side. The backend only performs lightweight metadata and policy checks.
-- We respect `robots.txt`, `meta` and `X‑Robots‑Tag` directives for extractability decisions.
-

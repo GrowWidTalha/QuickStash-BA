@@ -21,7 +21,7 @@ interface Save {
 export default function TestSavesPage() {
   const [url, setUrl] = useState('');
   const [saveId, setSaveId] = useState('');
-  const [accessToken, setAccessToken] = useState('YOUR_ACCESS_TOKEN_HERE'); // Replace with a valid access token
+  const [userId, setUserId] = useState('YOUR_USER_ID_HERE');
   const [response, setResponse] = useState<APIResponse | null>(null);
   const [allSaves, setAllSaves] = useState<Save[]>([]);
   const [loadingParse, setLoadingParse] = useState(false); // New loading state for parsing
@@ -37,7 +37,7 @@ export default function TestSavesPage() {
         body: JSON.stringify({
           apiKey: process.env.NEXT_PUBLIC_API_KEY, // Ensure you have this set in .env.local
           function: functionName,
-          params: { ...params, accessToken },
+        params: { ...params, userId },
         }),
       });
       const data = await res.json();
@@ -103,13 +103,13 @@ export default function TestSavesPage() {
       <h1 className="text-2xl font-bold mb-4">Saves API Test Page</h1>
 
       <div className="mb-4">
-        <label className="block text-sm font-bold mb-2">Access Token:</label>
+        <label className="block text-sm font-bold mb-2">User ID:</label>
         <input
           type="text"
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          value={accessToken}
-          onChange={(e) => setAccessToken(e.target.value)}
-          placeholder="Enter access token"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+          placeholder="Enter user id"
         />
       </div>
 

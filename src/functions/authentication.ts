@@ -13,7 +13,7 @@ export interface LoginParams {
 }
 
 export interface GetCurrentUserParams {
-    accessToken: string;
+    userId: string;
 }
 
 export interface ResetPasswordParams {
@@ -186,7 +186,7 @@ const authentication = {
             try {
                 console.log("~ 🚀: GetCurrentUser - validating params", params);
                 const schema = z.object({
-                    accessToken: z.string().min(1)
+                    userId: z.string().min(1)
                 });
                 const validatedParams = schema.safeParse(params);
                 if (!validatedParams.success)
@@ -195,20 +195,10 @@ const authentication = {
                         data: null,
                         error: validatedParams.error.issues[0].message,
                     };
-                const { accessToken } = params;
-                console.log("~ 🚀: GetCurrentUser - getting user from Supabase", accessToken);
-                const { data: { user }, error } = await supabase.auth.getUser(accessToken);
-                if (error || !user) {
-                    console.log("~ 🚀: GetCurrentUser - error or user not found", error);
-                    return {
-                        success: false,
-                        data: null,
-                        error: error?.message || "User not found",
-                    };
-                }
-                console.log("~ 🚀: GetCurrentUser - finding user in DB", user.id);
+                const { userId } = params;
+                console.log("~ 🚀: GetCurrentUser - finding user in DB by id", userId);
                 const dbUser = await database.user.findUnique({
-                    where: { supabaseUserId: user.id },
+                    where: { id: userId },
                 });
                 if (!dbUser) {
                     console.log("~ 🚀: GetCurrentUser - user not found in DB");

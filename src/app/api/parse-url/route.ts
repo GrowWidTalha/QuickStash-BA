@@ -5,6 +5,7 @@ import https from "https";
 import { URL } from "url";
 import robotsParser from "robots-parser"; // npm i robots-parser
 import database from "@/lib/config";
+import { blocked_domains } from "@/lib/blocked_domain";
 
 /**
  * Simple in-memory robots cache (ephemeral in serverless).
@@ -19,6 +20,21 @@ const BROWSER_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36";
 
 /* ---------------------- helpers (unchanged) ---------------------- */
+
+function isDomainBlocked(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
+    
+    // Check if the hostname or any of its subdomains match blocked domains
+    return blocked_domains.some(blockedDomain => {
+      const blocked = blockedDomain.toLowerCase();
+      return hostname === blocked || hostname.endsWith('.' + blocked);
+    });
+  } catch {
+    return false;
+  }
+}
 
 function extractFromHtml(html: string, baseUrl: string) {
   console.log("~~ STEP ~~ Extracting metadata from HTML");
@@ -316,6 +332,10 @@ export async function POST(req: NextRequest) {
     const { finalUrl, html: resolvedHtml } = await resolveFinalUrl(url);
     console.log(`~~ STEP ~~ Resolved finalUrl=${finalUrl}`);
 
+    // Check if domain is blocked
+    const isBlocked = isDomainBlocked(finalUrl);
+    console.log(`~~ STEP ~~ Domain blocked check: ${isBlocked}`);
+
     // Normalize final URL
     let origin: string;
     let pathname: string;
@@ -440,6 +460,9 @@ export async function POST(req: NextRequest) {
 
     // decide extractability status
     const extractability = (() => {
+      if (isBlocked) {
+        return { status: 'blocked' as const, reasons: [...reasons, 'domain_blocked'], blockedBy: [...blockedBy, 'domain_blocker'] };
+      }
       if (!allowed || blockedBy.includes('xrobots') || blockedBy.includes('meta') || blockedBy.some(s => s.startsWith('status_')) || blockedBy.includes('paywall')) {
         return { status: 'disallowed' as const, reasons, blockedBy };
       }
@@ -464,7 +487,44 @@ export async function POST(req: NextRequest) {
       console.warn('~~ STEP ~~ Failed to upsert domain policy', e);
     }
 
-    if (allowed && extractability.status === 'allowed') {
+    if (isBlocked) {
+      // Blocked domain: extract metadata but mark as blocked
+      console.log("~~ STEP ~~ Domain is blocked → extracting metadata only (isFetchingAllowed: false)");
+      
+      let title: string | null = null;
+      let featuredImage: string | null = null;
+      let favicon: string | null = null;
+      let excerpt: string | null = null;
+
+      if (resolvedHtml) {
+        try {
+          console.log("~~ STEP ~~ Extracting metadata from blocked domain HTML");
+          const extracted = extractFromHtml(resolvedHtml, finalUrl);
+          title = extracted.title;
+          featuredImage = extracted.featured;
+          favicon = extracted.favicon;
+          excerpt = extracted.excerpt;
+        } catch (parseErr) {
+          console.warn("~~ STEP ~~ Parsing blocked domain HTML failed", parseErr);
+        }
+      }
+
+      console.log("~~ STEP ~~ Returning blocked domain response with metadata");
+      return NextResponse.json({
+        success: true,
+        data: {
+          final_url: finalUrl,
+          title: title || finalUrl,
+          featuredImage: featuredImage || DEFAULT_PLACEHOLDER_IMAGE,
+          favicon: favicon || null,
+          excerpt: excerpt || null,
+          accept: acceptHeaderValue,
+          isFetchingAllowed: false,
+          extractability,
+          alternate,
+        },
+      });
+    } else if (allowed && extractability.status === 'allowed') {
       // Allowed: fetch HTML if needed, extract metadata and return
       console.log("~~ STEP ~~ robots allowed access → fetching HTML if not already available");
       if (!html) {

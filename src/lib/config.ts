@@ -27,4 +27,5 @@ export const config = {
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY as string,
   supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY as string,
   databaseUrl: process.env.DATABASE_URL as string,
+  resendApiKey: process.env.RESEND_API_KEY as string,
 };

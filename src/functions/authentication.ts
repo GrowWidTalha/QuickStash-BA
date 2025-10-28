@@ -1,6 +1,7 @@
 import { z } from "zod"
 import database, { supabase } from "@/lib/config"
 import { APIResponse } from "./types"
+import { sendWelcomeEmail } from "@/lib/welcome-email"
 
 
 export interface RegisterParams {
@@ -95,6 +96,26 @@ const authentication = {
                     supabaseUserId,
                 },
             });
+
+            // 3. Send welcome email to the new user
+            console.log("~ 🚀: Register - sending welcome email to", email);
+            try {
+                const emailResult = await sendWelcomeEmail({
+                    email,
+                    name: email.split("@")[0], // Use email prefix as name for now
+                    userId: dbUser.id,
+                });
+
+                if (emailResult.success) {
+                    console.log("~ ✅: Welcome email sent successfully", emailResult.emailId);
+                } else {
+                    console.log("~ ⚠️: Failed to send welcome email:", emailResult.error);
+                    // Don't fail registration if email fails, just log it
+                }
+            } catch (emailError) {
+                console.log("~ ⚠️: Error sending welcome email:", emailError);
+                // Don't fail registration if email fails, just log it
+            }
 
             return {
                 success: true,

@@ -1,6 +1,7 @@
 export const blocked_domains: string[] = [
     "youtube.com",
     "youtu.be",
+    "m.youtube.com",
     "x.com",
     "drive.com",
     "facebook.com",
@@ -25,4 +26,5 @@ export const blocked_domains: string[] = [
     "wikimedia.org",
     "wikimedia.com",
     "wikimedia.net",
+    "chatgpt.com"
 ];
